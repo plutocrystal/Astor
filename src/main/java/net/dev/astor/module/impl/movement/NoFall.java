@@ -35,6 +35,14 @@ public class NoFall extends Module {
         return this.scoreboardResetTimer.hasTimeElapsed(3000) && this.packetDelayTimer.hasTimeElapsed(this.delay.getValue().longValue());
     }
 
+    /**
+     * Packet mode slows the fall down by halving timerSpeed while it lasts. Timer multiplies
+     * instead of fighting it for the write, so it needs to know when that is running.
+     */
+    public boolean isSlowFalling() {
+        return this.slowFalling;
+    }
+
     public NoFall() {
         super("NoFall", Category.MOVEMENT, false);
     }

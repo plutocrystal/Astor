@@ -9,6 +9,7 @@ import net.dev.astor.event.events.impl.player.PlayerUpdateEvent;
 import net.dev.astor.event.events.impl.player.UpdateEvent;
 import net.dev.astor.management.RotationState;
 import net.dev.astor.module.impl.player.AntiDebuff;
+import net.dev.astor.module.impl.movement.NoPush;
 import net.dev.astor.module.impl.movement.NoSlow;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.potion.Potion;
@@ -23,6 +24,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @SideOnly(Side.CLIENT)
 @Mixin(value = {EntityPlayerSP.class}, priority = 9999)
@@ -163,5 +165,24 @@ public abstract class MixinEntityPlayerSP extends MixinEntityPlayer {
             }
         }
         return ((IAccessorEntityLivingBase) entityPlayerSP).getActivePotionsMap().containsKey(potion.id);
+    }
+
+    /**
+     * onLivingUpdate probes the four body corners with pushOutOfBlocks, which drags the player out
+     * of any block its bounding box has ended up inside. Cancelling it leaves the player where the
+     * block collision put them.
+     */
+    @Inject(
+            method = {"pushOutOfBlocks"},
+            at = {@At("HEAD")},
+            cancellable = true
+    )
+    private void pushOutOfBlocks(double x, double y, double z, CallbackInfoReturnable<Boolean> callbackInfo) {
+        if (Astor.moduleManager != null) {
+            NoPush noPush = (NoPush) Astor.moduleManager.modules.get(NoPush.class);
+            if (noPush != null && noPush.cancelBlockPush()) {
+                callbackInfo.setReturnValue(false);
+            }
+        }
     }
 }

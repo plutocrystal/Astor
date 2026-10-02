@@ -5,6 +5,7 @@ import net.dev.astor.event.EventManager;
 import net.dev.astor.event.events.impl.combat.KnockbackEvent;
 import net.dev.astor.event.events.impl.movement.SafeWalkEvent;
 import net.dev.astor.module.impl.exploit.NoPitchLimit;
+import net.dev.astor.module.impl.movement.NoPush;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.MathHelper;
@@ -99,6 +100,30 @@ public abstract class MixinEntity {
             }
         }
         return MathHelper.clamp_float(value, min, max);
+    }
+
+    /**
+     * applyEntityCollision separates overlapping entities by handing both of them a share of the
+     * push. The receiver of addVelocity tells the two calls apart, so the share aimed at the local
+     * player is dropped when NoPush is on while the other entity is still pushed away and does not
+     * end up walking through the player.
+     */
+    @Redirect(
+            method = {"applyEntityCollision"},
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/entity/Entity;addVelocity(DDD)V"
+            )
+    )
+    private void noPushEntityCollision(Entity entity, double x, double y, double z) {
+        Entity self = (Entity) ((Object) this);
+        if (entity == self && self instanceof EntityPlayerSP && Astor.moduleManager != null) {
+            NoPush noPush = (NoPush) Astor.moduleManager.modules.get(NoPush.class);
+            if (noPush != null && noPush.cancelEntityPush()) {
+                return;
+            }
+        }
+        entity.addVelocity(x, y, z);
     }
 
     @ModifyVariable(

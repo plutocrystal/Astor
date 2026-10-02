@@ -11,6 +11,7 @@ import net.dev.astor.module.impl.player.AntiDebuff;
 import net.dev.astor.module.impl.player.AutoBlockIn;
 import net.dev.astor.module.impl.player.GhostHand;
 import net.dev.astor.module.impl.player.Scaffold;
+import net.dev.astor.module.impl.render.AspectRatio;
 import net.dev.astor.module.impl.render.NoHurtCam;
 import net.dev.astor.module.impl.render.ViewClip;
 import net.minecraft.block.Block;
@@ -25,6 +26,7 @@ import net.minecraft.potion.Potion;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.lwjgl.util.glu.Project;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -274,6 +276,68 @@ public abstract class MixinEntityRenderer {
             }
         }
         return ((IAccessorEntityLivingBase) entityLivingBase).getActivePotionsMap().containsKey(potion.id);
+    }
+
+    /**
+     * Every projection in EntityRenderer goes through this call: the world setup, the sky and world
+     * pass, the cloud layer and the held item. AspectRatio answers with its own width here, and
+     * without this the world pass would immediately overwrite the matrix set during setup and the
+     * setting would have nothing to show. Each of the four injectors below covers every call site
+     * inside its own method, hence no ordinal.
+     */
+    @Redirect(
+            method = {"setupCameraTransform"},
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lorg/lwjgl/util/glu/Project;gluPerspective(FFFF)V"
+            )
+    )
+    private void perspectiveCameraTransform(float fov, float aspect, float near, float far) {
+        this.perspective(fov, aspect, near, far);
+    }
+
+    @Redirect(
+            method = {"renderWorldPass"},
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lorg/lwjgl/util/glu/Project;gluPerspective(FFFF)V"
+            )
+    )
+    private void perspectiveWorldPass(float fov, float aspect, float near, float far) {
+        this.perspective(fov, aspect, near, far);
+    }
+
+    @Redirect(
+            method = {"renderCloudsCheck"},
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lorg/lwjgl/util/glu/Project;gluPerspective(FFFF)V"
+            )
+    )
+    private void perspectiveClouds(float fov, float aspect, float near, float far) {
+        this.perspective(fov, aspect, near, far);
+    }
+
+    @Redirect(
+            method = {"renderHand"},
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lorg/lwjgl/util/glu/Project;gluPerspective(FFFF)V"
+            )
+    )
+    private void perspectiveHand(float fov, float aspect, float near, float far) {
+        this.perspective(fov, aspect, near, far);
+    }
+
+    private void perspective(float fov, float aspect, float near, float far) {
+        float resolved = aspect;
+        if (Astor.moduleManager != null) {
+            AspectRatio aspectRatio = (AspectRatio) Astor.moduleManager.modules.get(AspectRatio.class);
+            if (aspectRatio != null && aspectRatio.isEnabled()) {
+                resolved = aspectRatio.getAspect(aspect);
+            }
+        }
+        Project.gluPerspective(fov, resolved, near, far);
     }
 
     @Redirect(
