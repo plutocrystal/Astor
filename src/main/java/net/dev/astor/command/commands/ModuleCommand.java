@@ -2,6 +2,7 @@ package net.dev.astor.command.commands;
 
 import net.dev.astor.Astor;
 import net.dev.astor.command.Command;
+import net.dev.astor.command.ModuleValueCommand;
 import net.dev.astor.module.Module;
 import net.dev.astor.util.ChatUtil;
 import net.dev.astor.property.Property;
@@ -14,6 +15,11 @@ import java.util.stream.Collectors;
 public class ModuleCommand extends Command {
     public ModuleCommand() {
         super(new ArrayList<>(Astor.moduleManager.modules.values().stream().<String>map(Module::getName).collect(Collectors.<String>toList())));
+    }
+
+    @Override
+    public List<String> complete(String[] args) {
+        return new ModuleValueCommand().complete(args);
     }
 
     @Override

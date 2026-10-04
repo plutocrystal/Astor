@@ -8,8 +8,8 @@ import net.dev.astor.event.types.EventType;
 import net.dev.astor.event.types.Priority;
 import net.dev.astor.event.events.impl.network.PacketEvent;
 import net.dev.astor.event.events.impl.player.TickEvent;
-import net.dev.astor.mixin.IAccessorC03PacketPlayer;
-import net.dev.astor.mixin.IAccessorMinecraft;
+import net.dev.astor.mixin.packet.IAccessorC03PacketPlayer;
+import net.dev.astor.mixin.client.IAccessorMinecraft;
 import net.dev.astor.module.Module;
 import net.dev.astor.util.*;
 import net.dev.astor.property.properties.FloatProperty;
@@ -35,10 +35,6 @@ public class NoFall extends Module {
         return this.scoreboardResetTimer.hasTimeElapsed(3000) && this.packetDelayTimer.hasTimeElapsed(this.delay.getValue().longValue());
     }
 
-    /**
-     * Packet mode slows the fall down by halving timerSpeed while it lasts. Timer multiplies
-     * instead of fighting it for the write, so it needs to know when that is running.
-     */
     public boolean isSlowFalling() {
         return this.slowFalling;
     }

@@ -1,0 +1,74 @@
+{
+  "fdp/enable": {
+    "category": "master",
+    "sounds": [
+      {
+        "name": "astor:fdp/enable",
+        "stream": false
+      }
+    ]
+  },
+  "fdp/disable": {
+    "category": "master",
+    "sounds": [
+      {
+        "name": "astor:fdp/disable",
+        "stream": false
+      }
+    ]
+  },
+  "sigma/enable": {
+    "category": "master",
+    "sounds": [
+      {
+        "name": "astor:sigma/enable",
+        "stream": false
+      }
+    ]
+  },
+  "sigma/disable": {
+    "category": "master",
+    "sounds": [
+      {
+        "name": "astor:sigma/disable",
+        "stream": false
+      }
+    ]
+  },
+  "quickmacro/enable": {
+    "category": "master",
+    "sounds": [
+      {
+        "name": "astor:quickmacro/enable",
+        "stream": false
+      }
+    ]
+  },
+  "quickmacro/disable": {
+    "category": "master",
+    "sounds": [
+      {
+        "name": "astor:quickmacro/disable",
+        "stream": false
+      }
+    ]
+  },
+  "rise/enable": {
+    "category": "master",
+    "sounds": [
+      {
+        "name": "astor:rise/enable",
+        "stream": false
+      }
+    ]
+  },
+  "rise/disable": {
+    "category": "master",
+    "sounds": [
+      {
+        "name": "astor:rise/disable",
+        "stream": false
+      }
+    ]
+  }
+}

@@ -4,7 +4,7 @@ import net.dev.astor.module.Category;
 import net.dev.astor.event.EventTarget;
 import net.dev.astor.event.types.EventType;
 import net.dev.astor.event.events.impl.player.TickEvent;
-import net.dev.astor.mixin.IAccessorGuiScreen;
+import net.dev.astor.mixin.gui.IAccessorGuiScreen;
 import net.dev.astor.module.Module;
 import net.dev.astor.property.properties.IntProperty;
 import net.minecraft.client.Minecraft;

@@ -8,7 +8,7 @@ import net.dev.astor.event.types.Priority;
 import net.dev.astor.event.events.impl.input.LeftClickMouseEvent;
 import net.dev.astor.event.events.impl.render.Render3DEvent;
 import net.dev.astor.event.events.impl.player.TickEvent;
-import net.dev.astor.mixin.IAccessorRenderManager;
+import net.dev.astor.mixin.render.IAccessorRenderManager;
 import net.dev.astor.module.Module;
 import net.dev.astor.util.RenderUtil;
 import net.dev.astor.util.TeamUtil;
@@ -45,7 +45,8 @@ public class HitBox extends Module {
     private MovingObjectPosition targetEntity = null;
     public final FloatProperty multiplier = new FloatProperty("Multiplier", 1.2F, 1.0F, 5.0F);
     public final ModeProperty showHitbox = new ModeProperty("ShowHitbox", 0, new String[]{"None", "Players", "Mobs", "Animals", "All"});
-    public final ColorProperty color = new ColorProperty("Color", new Color(255, 255, 255).getRGB(), () -> this.showHitbox.getValue() != 0);
+
+    public final ColorProperty color = new ColorProperty("Color", 0x96FFFFFF, () -> this.showHitbox.getValue() != 0);
     public final BooleanProperty teams = new BooleanProperty("Teams", true, () -> this.showHitbox.getValue() == 1 || this.showHitbox.getValue() == 4);
     public final BooleanProperty botCheck = new BooleanProperty("BotCheck", true, () -> this.showHitbox.getValue() == 1 || this.showHitbox.getValue() == 4);
 
@@ -210,7 +211,7 @@ public class HitBox extends Module {
                     .collect(Collectors.toList());
             if (!entities.isEmpty()) {
                 RenderUtil.enableRenderState();
-                Color renderColor = new Color(this.color.getValue());
+                Color renderColor = new Color(this.color.getValue(), true);
                 for (EntityLivingBase entity : entities) {
                     float collisionSize = (float) ((double) entity.getCollisionBorderSize() * this.multiplier.getValue());
                     AxisAlignedBB expandedBox = entity.getEntityBoundingBox().expand(collisionSize, collisionSize, collisionSize);
@@ -222,7 +223,7 @@ public class HitBox extends Module {
                             expandedBox.maxY - entity.posY + (RenderUtil.lerpDouble(entity.posY, entity.lastTickPosY, event.getPartialTicks()) - ((IAccessorRenderManager) mc.getRenderManager()).getRenderPosY()),
                             expandedBox.maxZ - entity.posZ + (RenderUtil.lerpDouble(entity.posZ, entity.lastTickPosZ, event.getPartialTicks()) - ((IAccessorRenderManager) mc.getRenderManager()).getRenderPosZ())
                     );
-                    RenderUtil.drawBoundingBox(offsetBox, renderColor.getRed(), renderColor.getGreen(), renderColor.getBlue(), 150, 1.5F);
+                    RenderUtil.drawBoundingBox(offsetBox, renderColor.getRed(), renderColor.getGreen(), renderColor.getBlue(), renderColor.getAlpha(), 1.5F);
                 }
                 RenderUtil.disableRenderState();
             }

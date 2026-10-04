@@ -22,10 +22,6 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-/**
- * Finds every module implementation below net.dev.astor.module.impl, so dropping a class into
- * a category package is all that is needed for it to show up in the module manager.
- */
 public final class ModuleScanner {
     public static final String IMPL_PACKAGE = "net.dev.astor.module.impl";
     private static final String IMPL_PATH = IMPL_PACKAGE.replace('.', '/') + "/";
@@ -53,9 +49,6 @@ public final class ModuleScanner {
         return modules;
     }
 
-    /**
-     * Category the module was filed under, or null when it does not sit in a category package.
-     */
     public static Category categoryOf(Class<? extends Module> clazz) {
         String name = clazz.getName();
         if (!name.startsWith(IMPL_PACKAGE + ".")) {
@@ -81,9 +74,6 @@ public final class ModuleScanner {
         return classNames;
     }
 
-    /**
-     * Every classpath entry that exposes the package directory, both plain directories and jars.
-     */
     private static void collectResources(Set<String> classNames) {
         Enumeration<URL> resources;
         try {
@@ -109,11 +99,6 @@ public final class ModuleScanner {
         }
     }
 
-    /**
-     * Backup for loaders that do not hand out the package as a resource. The code source is the
-     * directory or jar the client itself was loaded from, and its location may be wrapped in a
-     * jar: URL rather than pointing at the file directly.
-     */
     private static void collectCodeSource(Set<String> classNames) {
         URL location;
         try {
@@ -142,9 +127,6 @@ public final class ModuleScanner {
         }
     }
 
-    /**
-     * Strips the jar: wrapper off a nested location so the underlying file can be reached.
-     */
     private static URL unwrap(URL url) throws IOException {
         String spec = url.toString();
         if (spec.startsWith("jar:")) {
@@ -165,9 +147,6 @@ public final class ModuleScanner {
         }
     }
 
-    /**
-     * Walks the package directory, reporting paths relative to the classpath root they came from.
-     */
     private static void walkDirectory(Path packageDirectory, Path root, Set<String> classNames) throws IOException {
         if (!Files.isDirectory(packageDirectory)) {
             return;

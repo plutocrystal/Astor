@@ -1,7 +1,7 @@
 package net.dev.astor.module;
 
 import net.dev.astor.Astor;
-import net.dev.astor.module.impl.render.HUD;
+import net.dev.astor.module.impl.render.ClientSetting;
 import net.dev.astor.util.KeyBindUtil;
 
 public abstract class Module {
@@ -66,8 +66,9 @@ public abstract class Module {
         boolean enabled = !this.enabled;
         this.setEnabled(enabled);
         if (this.enabled == enabled) {
-            if (((HUD) Astor.moduleManager.modules.get(HUD.class)).toggleSound.getValue()) {
-                Astor.moduleManager.playSound();
+            ClientSetting clientSetting = (ClientSetting) Astor.moduleManager.modules.get(ClientSetting.class);
+            if (clientSetting != null && clientSetting.toggleSounds.getValue()) {
+                Astor.moduleManager.playSound(enabled);
             }
             return true;
         } else {
@@ -90,9 +91,6 @@ public abstract class Module {
         this.key = integer;
     }
 
-    /**
-     * Binds without taking the key away from other modules, used by ".bind *".
-     */
     public void setKeyShared(int integer) {
         this.key = integer;
     }

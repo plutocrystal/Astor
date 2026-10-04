@@ -2,6 +2,7 @@ package net.dev.astor.command.commands;
 
 import net.dev.astor.Astor;
 import net.dev.astor.command.Command;
+import net.dev.astor.command.ModuleValueCommand;
 import net.dev.astor.module.Module;
 import net.dev.astor.util.ChatUtil;
 import net.dev.astor.util.KeyBindUtil;
@@ -10,6 +11,7 @@ import org.lwjgl.input.Mouse;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -93,8 +95,13 @@ public class BindCommand extends Command {
         }
     }
 
+    @Override
+    public List<String> complete(String[] args) {
+        return args.length == 1 ? new ModuleValueCommand().moduleNames() : Collections.emptyList();
+    }
+
     private int getMouseButtonIndex(String buttonName) {
-        // Handle numbered format (MOUSE0, MOUSE1, etc.)
+
         if (buttonName.startsWith("MOUSE")) {
             try {
                 String numStr = buttonName.substring(5);

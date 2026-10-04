@@ -8,7 +8,7 @@ import net.dev.astor.event.EventTarget;
 import net.dev.astor.event.types.EventType;
 import net.dev.astor.event.events.impl.render.Render2DEvent;
 import net.dev.astor.event.events.impl.player.TickEvent;
-import net.dev.astor.mixin.IAccessorGuiChat;
+import net.dev.astor.mixin.gui.IAccessorGuiChat;
 import net.dev.astor.module.Module;
 import net.dev.astor.util.ColorUtil;
 import net.dev.astor.util.RenderUtil;
@@ -50,8 +50,6 @@ public class HUD extends Module {
     public final BooleanProperty lowerCase = new BooleanProperty("LowerCase", false);
     public final BooleanProperty chatOutline = new BooleanProperty("ChatOutline", true);
     public final BooleanProperty blinkTimer = new BooleanProperty("BlinkTimer", true);
-    public final BooleanProperty toggleSound = new BooleanProperty("ToggleSounds", true);
-    public final BooleanProperty toggleAlerts = new BooleanProperty("ToggleAlerts", false);
 
     private String getModuleName(Module module) {
         String moduleName = module.getName();
@@ -117,23 +115,23 @@ public class HUD extends Module {
                 color = ColorUtil.fromHSB(cycle, 1.0F, 1.0F);
                 break;
             case 3:
-                color = new Color(this.custom1.getValue());
+                color = new Color(this.custom1.getValue(), true);
                 break;
             case 4:
                 double cycle1 = this.getColorCycle(time, offset);
                 color = ColorUtil.interpolate(
                         (float) (2.0 * Math.abs(cycle1 - Math.floor(cycle1 + 0.5))),
-                        new Color(this.custom1.getValue()),
-                        new Color(this.custom2.getValue())
+                        new Color(this.custom1.getValue(), true),
+                        new Color(this.custom2.getValue(), true)
                 );
                 break;
             case 5:
                 double cycle2 = this.getColorCycle(time, offset);
                 float floor = (float) (2.0 * Math.abs(cycle2 - Math.floor(cycle2 + 0.5)));
                 if (floor <= 0.5F) {
-                    color = ColorUtil.interpolate(floor * 2.0F, new Color(this.custom1.getValue()), new Color(this.custom2.getValue()));
+                    color = ColorUtil.interpolate(floor * 2.0F, new Color(this.custom1.getValue(), true), new Color(this.custom2.getValue(), true));
                 } else {
-                    color = ColorUtil.interpolate((floor - 0.5F) * 2.0F, new Color(this.custom2.getValue()), new Color(this.custom3.getValue()));
+                    color = ColorUtil.interpolate((floor - 0.5F) * 2.0F, new Color(this.custom2.getValue(), true), new Color(this.custom3.getValue(), true));
                 }
         }
         float[] hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);

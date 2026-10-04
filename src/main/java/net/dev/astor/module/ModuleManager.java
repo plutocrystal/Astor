@@ -5,8 +5,8 @@ import net.dev.astor.event.EventTarget;
 import net.dev.astor.event.types.EventType;
 import net.dev.astor.event.events.impl.input.KeyEvent;
 import net.dev.astor.event.events.impl.player.TickEvent;
+import net.dev.astor.module.impl.render.ClientSetting;
 import net.dev.astor.module.impl.render.GuiModule;
-import net.dev.astor.module.impl.render.HUD;
 import net.dev.astor.util.ChatUtil;
 import net.dev.astor.util.SoundUtil;
 
@@ -16,13 +16,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 public class ModuleManager {
-    private boolean sound = false;
+
+    private Boolean pendingSound = null;
     public final LinkedHashMap<Class<?>, Module> modules = new LinkedHashMap<>();
 
-    /**
-     * Registers every module found in net.dev.astor.module.impl, so a new class only has to be
-     * dropped into a category package to become available.
-     */
     public void registerAll() {
         List<Class<? extends Module>> found = ModuleScanner.findModules();
         for (Class<? extends Module> clazz : found) {
@@ -60,8 +57,8 @@ public class ModuleManager {
         return this.modules.get(clazz);
     }
 
-    public void playSound() {
-        this.sound = true;
+    public void playSound(boolean enabled) {
+        this.pendingSound = enabled;
     }
 
     @EventTarget
@@ -71,9 +68,9 @@ public class ModuleManager {
                 continue;
             }
             boolean shouldNotify = module.toggle();
-            HUD hud = (HUD) this.modules.get(HUD.class);
-            if (hud != null && shouldNotify) {
-                shouldNotify = hud.toggleAlerts.getValue();
+            ClientSetting clientSetting = (ClientSetting) this.modules.get(ClientSetting.class);
+            if (clientSetting != null && shouldNotify) {
+                shouldNotify = clientSetting.toggleAlerts.getValue();
             }
             if(module instanceof GuiModule){
                 shouldNotify = false;
@@ -88,10 +85,12 @@ public class ModuleManager {
 
     @EventTarget
     public void onTick(TickEvent event) {
-        if (event.getType() == EventType.PRE) {
-            if (this.sound) {
-                this.sound = false;
-                SoundUtil.playSound("random.click");
+        if (event.getType() == EventType.PRE && this.pendingSound != null) {
+            boolean enabled = this.pendingSound;
+            this.pendingSound = null;
+            ClientSetting clientSetting = (ClientSetting) this.modules.get(ClientSetting.class);
+            if (clientSetting != null) {
+                SoundUtil.playSound(clientSetting.getToggleSound(enabled));
             }
         }
     }

@@ -1,4 +1,3 @@
-
 package net.dev.astor.ui.components;
 
 import net.dev.astor.Astor;
@@ -93,7 +92,6 @@ public class SliderComponent implements Component {
         }
     }
 
-
     private static double roundToPrecision(double v, int precision) {
         if (precision < 0) {
             return 0.0D;
@@ -156,7 +154,6 @@ public class SliderComponent implements Component {
     public boolean isRightHalfHovered(int x, int y) {
         return x > this.x + this.parentModule.category.getWidth() / 2 && x < this.x + this.parentModule.category.getWidth() && y > this.y + 8 && y < this.y + 16;
     }
-
 
     @Override
     public boolean isVisible() {

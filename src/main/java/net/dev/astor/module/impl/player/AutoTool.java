@@ -23,9 +23,14 @@ public class AutoTool extends Module {
     public final IntProperty switchDelay = new IntProperty("Delay", 0, 0, 5);
     public final BooleanProperty switchBack = new BooleanProperty("SwitchBack", true);
     public final BooleanProperty sneakOnly = new BooleanProperty("SneakOnly", true);
+    public final BooleanProperty itemSpoof = new BooleanProperty("ItemSpoof", false);
 
     public AutoTool() {
         super("AutoTool", Category.PLAYER, false);
+    }
+
+    public int getSlot() {
+        return this.currentToolSlot;
     }
 
     public boolean isKillAura() {

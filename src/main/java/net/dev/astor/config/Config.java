@@ -2,7 +2,7 @@ package net.dev.astor.config;
 
 import com.google.gson.*;
 import net.dev.astor.Astor;
-import net.dev.astor.mixin.IAccessorMinecraft;
+import net.dev.astor.mixin.client.IAccessorMinecraft;
 import net.dev.astor.module.Module;
 import net.dev.astor.util.ChatUtil;
 import net.dev.astor.property.Property;
@@ -107,10 +107,6 @@ public class Config {
         }
     }
 
-    /**
-     * Property names used to be written in kebab case, so a config saved before the rename to
-     * UpperCamelCase still has to be understood.
-     */
     private static String legacyName(String name) {
         StringBuilder legacy = new StringBuilder();
         for (int i = 0; i < name.length(); i++) {

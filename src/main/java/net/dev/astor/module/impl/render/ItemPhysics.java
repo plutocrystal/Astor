@@ -7,12 +7,6 @@ import net.dev.astor.property.properties.FloatProperty;
 import net.dev.astor.property.properties.ModeProperty;
 import net.minecraft.item.ItemStack;
 
-/**
- * Rewrites how dropped items are laid out on the ground. Size stretches them, Physics lays a
- * resting stack flat along the entity's own yaw and pitch instead of spinning it, and 1.7 goes back
- * to the old flat stacking look. Count and Durability add text over the stack, which vanilla 1.8.9
- * does not draw for dropped items at all.
- */
 public class ItemPhysics extends Module {
     private static final String[] MODES = {"Default", "Physics", "1.7"};
     private static final int PHYSICS = 1;
@@ -47,10 +41,6 @@ public class ItemPhysics extends Module {
         return this.isEnabled() && this.showDurability.getValue();
     }
 
-    /**
-     * 1.7 spread a stack of blocks into up to five flat layers, with different breakpoints than the
-     * five-row cube vanilla uses.
-     */
     public static int get17BlockCount(ItemStack stack) {
         if (stack.stackSize > 40) {
             return 5;
@@ -64,9 +54,6 @@ public class ItemPhysics extends Module {
         return 1;
     }
 
-    /**
-     * Flat items such as paper were capped at four, with lower breakpoints than the blocks above.
-     */
     public static int get17FlatCount(ItemStack stack) {
         if (stack.stackSize < 2) {
             return 1;

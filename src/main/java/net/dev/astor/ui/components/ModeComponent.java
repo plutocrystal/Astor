@@ -48,7 +48,6 @@ public class ModeComponent implements Component {
         return 12;
     }
 
-
     public boolean mouseDown(int x, int y, int button) {
         if (this.parentModule.panelExpand && isHovered(x, y)) {
             if (button == 0) {

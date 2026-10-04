@@ -6,7 +6,7 @@ import net.dev.astor.event.EventTarget;
 import net.dev.astor.event.types.Priority;
 import net.dev.astor.event.events.impl.player.LivingUpdateEvent;
 import net.dev.astor.event.events.impl.movement.StrafeEvent;
-import net.dev.astor.mixin.IAccessorEntity;
+import net.dev.astor.mixin.movement.IAccessorEntity;
 import net.dev.astor.module.Module;
 import net.dev.astor.module.impl.player.Scaffold;
 import net.dev.astor.util.MoveUtil;

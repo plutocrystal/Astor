@@ -116,9 +116,6 @@ public class CategoryComponent {
         }
     }
 
-    /**
-     * Offsets every component, scrolling included, so hit boxes always match what is drawn.
-     */
     private void layout() {
         int renderHeight = this.bh + 3;
         for (Component component : this.modulesInCategory) {
@@ -154,11 +151,6 @@ public class CategoryComponent {
         }
     }
 
-    /**
-     * Handles the +/- button and the start of a category drag.
-     *
-     * @return true if the click was consumed by the header
-     */
     public boolean handleHeaderClick(int x, int y, int button) {
         if (button != 0 || !this.insideArea(x, y)) {
             return false;
@@ -173,9 +165,6 @@ public class CategoryComponent {
         return true;
     }
 
-    /**
-     * Only the part of the panel that is actually visible (and not scrolled away) may be clicked.
-     */
     public boolean isInsideBody(int x, int y) {
         if (!this.categoryOpened) {
             return false;

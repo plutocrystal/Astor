@@ -35,7 +35,7 @@ public class AutoBlockIn extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
     private final Map<String, Integer> BLOCK_SCORE = new HashMap<>();
     private long lastPlaceTime = 0;
-    
+
     public final FloatProperty range = new FloatProperty("Range", 4.5f, 3.0f, 6.0f);
     public final IntProperty speed = new IntProperty("Speed", 20, 5, 100);
     public final IntProperty placeDelay = new IntProperty("PlaceDelay", 50, 0, 200);
@@ -43,7 +43,7 @@ public class AutoBlockIn extends Module {
     public final BooleanProperty itemSpoof = new BooleanProperty("ItemSpoof", true);
     public final BooleanProperty showProgress = new BooleanProperty("ShowProgress", true);
     public final ModeProperty moveFix = new ModeProperty("MoveFix", 1, new String[]{"None", "Silent", "Strict"});
-    
+
     private float serverYaw;
     private float serverPitch;
     private float progress;
@@ -53,15 +53,15 @@ public class AutoBlockIn extends Module {
     private EnumFacing targetFacing;
     private Vec3 targetHitVec;
     private int lastSlot = -1;
-    
+
     private static final int[][] DIRS = {{1,0,0}, {0,0,1}, {-1,0,0}, {0,0,-1}};
     private static final double INSET = 0.05;
     private static final double STEP = 0.2;
     private static final double JIT = STEP * 0.1;
-    
+
     public AutoBlockIn() {
         super("AutoBlockIn", Category.PLAYER, false);
-        
+
         BLOCK_SCORE.put("obsidian", 0);
         BLOCK_SCORE.put("end_stone", 1);
         BLOCK_SCORE.put("planks", 2);
@@ -105,14 +105,14 @@ public class AutoBlockIn extends Module {
         if (!isEnabled()) return;
         if (event.getType() != EventType.PRE) return;
         if (mc.thePlayer == null || mc.theWorld == null) return;
-        
+
         if (mc.currentScreen != null) {
             return;
         }
-        
+
         serverYaw = event.getYaw();
         serverPitch = event.getPitch();
-        
+
         updateProgress();
 
         int blockSlot = findBestBlockSlot();
@@ -122,7 +122,7 @@ public class AutoBlockIn extends Module {
                 mc.thePlayer.inventory.currentItem = blockSlot;
             }
         }
-        
+
         ItemStack currentHeld = mc.thePlayer.inventory.getCurrentItem();
         boolean holdingBlock = currentHeld != null && currentHeld.getItem() instanceof ItemBlock;
         if (!holdingBlock) {
@@ -131,31 +131,31 @@ public class AutoBlockIn extends Module {
             targetHitVec = null;
             return;
         }
-        
+
         findBestPlacement();
-        
+
         if (targetBlock != null && targetFacing != null && targetHitVec != null) {
             Vec3 eyes = mc.thePlayer.getPositionEyes(1.0f);
             double dx = targetHitVec.xCoord - eyes.xCoord;
             double dy = targetHitVec.yCoord - eyes.yCoord;
             double dz = targetHitVec.zCoord - eyes.zCoord;
             double dist = Math.sqrt(dx * dx + dz * dz);
-            
+
             float targetYaw = (float)Math.toDegrees(Math.atan2(dz, dx)) - 90.0f;
             float targetPitch = (float)-Math.toDegrees(Math.atan2(dy, dist));
-            
+
             targetYaw = MathHelper.wrapAngleTo180_float(targetYaw);
-            
+
             float yawDiff = MathHelper.wrapAngleTo180_float(targetYaw - serverYaw);
             float pitchDiff = targetPitch - serverPitch;
-            
+
             float maxTurn = speed.getValue().floatValue();
             float yawStep = MathHelper.clamp_float(yawDiff, -maxTurn, maxTurn);
             float pitchStep = MathHelper.clamp_float(pitchDiff, -maxTurn, maxTurn);
-            
+
             aimYaw = serverYaw + yawStep;
             aimPitch = MathHelper.clamp_float(serverPitch + pitchStep, -90.0f, 90.0f);
-            
+
             event.setRotation(aimYaw, aimPitch, 6);
             event.setPervRotation(this.moveFix.getValue() != 0 ? aimYaw : mc.thePlayer.rotationYaw, 6);
         }
@@ -172,33 +172,33 @@ public class AutoBlockIn extends Module {
             }
         }
     }
-    
+
     @EventTarget(Priority.HIGH)
     public void onTick(TickEvent event) {
         if (!isEnabled()) return;
         if (event.getType() != EventType.PRE) return;
         if (mc.thePlayer == null || mc.theWorld == null) return;
-        
+
         if (mc.currentScreen != null) {
             return;
         }
-        
+
         if (targetBlock != null && targetFacing != null && targetHitVec != null) {
             if (!withinRotationTolerance(aimYaw, aimPitch)) {
                 return;
             }
-            
+
             long currentTime = System.currentTimeMillis();
             if (currentTime - lastPlaceTime >= placeDelay.getValue()) {
                 lastPlaceTime = currentTime;
-                
+
                 MovingObjectPosition mop = rayTraceBlock(aimYaw, aimPitch, range.getValue());
-                
-                if (mop != null 
+
+                if (mop != null
                         && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK
                         && mop.getBlockPos().equals(targetBlock)
                         && mop.sideHit == targetFacing) {
-                    
+
                     ItemStack heldStack = mc.thePlayer.inventory.getCurrentItem();
                     if (heldStack != null && heldStack.getItem() instanceof ItemBlock) {
                         mc.playerController.onPlayerRightClick(
@@ -209,7 +209,7 @@ public class AutoBlockIn extends Module {
                             targetFacing,
                             mop.hitVec);
                         mc.thePlayer.swingItem();
-                        
+
                         targetBlock = null;
                         targetFacing = null;
                         targetHitVec = null;
@@ -226,27 +226,27 @@ public class AutoBlockIn extends Module {
             event.setCancelled(true);
         }
     }
-    
+
     @EventTarget
     public void onRender2D(Render2DEvent event) {
         if (!isEnabled() || mc.currentScreen != null) return;
         if (!showProgress.getValue()) return;
         if (mc.fontRendererObj == null) return;
-        
+
         float scale = 1.0f;
         String text = String.format("Blocking: %.0f%%", progress * 100.0F);
-        
+
         GL11.glPushMatrix();
         GL11.glScaled((double)scale, (double)scale, 0.0);
         GlStateManager.disableDepth();
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        
+
         ScaledResolution sr = new ScaledResolution(mc);
         int width = mc.fontRendererObj.getStringWidth(text);
-        
+
         Color color = getProgressColor();
-        
+
         mc.fontRendererObj.drawString(
             text,
             (float) sr.getScaledWidth() / 2.0F / scale - (float) width / 2.0F,
@@ -254,7 +254,7 @@ public class AutoBlockIn extends Module {
             color.getRGB() & 16777215 | -1090519040,
             true
         );
-        
+
         GlStateManager.disableBlend();
         GlStateManager.enableDepth();
         GL11.glPopMatrix();
@@ -263,15 +263,15 @@ public class AutoBlockIn extends Module {
     private int findBestBlockSlot() {
         int bestSlot = -1;
         int bestScore = Integer.MAX_VALUE;
-        
+
         for (int slot = 0; slot <= 8; slot++) {
             ItemStack stack = mc.thePlayer.inventory.getStackInSlot(slot);
             if (stack == null || stack.stackSize == 0) continue;
-            
+
             if (stack.getItem() instanceof ItemBlock) {
                 Block block = ((ItemBlock) stack.getItem()).getBlock();
                 String blockName = block.getUnlocalizedName().replace("tile.", "");
-                
+
                 Integer score = BLOCK_SCORE.get(blockName);
                 if (score != null && score < bestScore) {
                     bestScore = score;
@@ -280,7 +280,7 @@ public class AutoBlockIn extends Module {
                 }
             }
         }
-        
+
         return bestSlot;
     }
 
@@ -416,35 +416,32 @@ public class AutoBlockIn extends Module {
         return (dx + dy + dz) == 1;
     }
 
-
     private boolean tryPlaceOnBlock(BlockPos supportBlock, Vec3 eye, double reach, BlockPos targetPos) {
-        // Try all 6 faces of support block
+
         for (EnumFacing facing : EnumFacing.values()) {
             BlockPos placementPos = supportBlock.offset(facing);
-            
-            // Check if placement would be at target
+
             if (!placementPos.equals(targetPos)) continue;
-            
-            // Generate candidate hit points on this face
+
             int n = (int) Math.round(1 / STEP);
-            
+
             for (int r = 0; r <= n; r++) {
                 double v = r * STEP + (Math.random() * JIT * 2 - JIT);
                 if (v < 0) v = 0; else if (v > 1) v = 1;
-                
+
                 for (int c = 0; c <= n; c++) {
                     double u = c * STEP + (Math.random() * JIT * 2 - JIT);
                     if (u < 0) u = 0; else if (u > 1) u = 1;
-                    
+
                     Vec3 hitPos = getHitPosOnFace(supportBlock, facing, u, v);
                     float[] rot = getRotationsWrapped(eye, hitPos.xCoord, hitPos.yCoord, hitPos.zCoord);
-                    
+
                     MovingObjectPosition mop = rayTraceBlock(rot[0], rot[1], reach);
-                    if (mop != null 
+                    if (mop != null
                             && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK
                             && mop.getBlockPos().equals(supportBlock)
                             && mop.sideHit == facing) {
-                        
+
                         targetBlock = supportBlock;
                         targetFacing = facing;
                         targetHitVec = mop.hitVec;
@@ -455,27 +452,27 @@ public class AutoBlockIn extends Module {
                 }
             }
         }
-        
+
         return false;
     }
 
     private void sidesAim(Vec3 eye, double reach, BlockPos feetPos) {
         List<BlockPos> goals = new ArrayList<>();
-        
+
         for (int[] d : DIRS) {
             BlockPos headPos = feetPos.add(d[0], 1, d[2]);
             if (isAir(headPos)) {
                 goals.add(headPos);
             }
         }
-        
+
         for (int[] d : DIRS) {
             BlockPos feetGoal = feetPos.add(d[0], 0, d[2]);
             if (isAir(feetGoal)) {
                 goals.add(feetGoal);
             }
         }
-        
+
         findBestForGoals(goals, eye, reach);
     }
 
@@ -483,31 +480,30 @@ public class AutoBlockIn extends Module {
         for (BlockPos goal : goals) {
             for (EnumFacing facing : EnumFacing.values()) {
                 BlockPos support = goal.offset(facing);
-                
+
                 if (isAir(support)) continue;
-                
+
                 Vec3 center = new Vec3(support.getX() + 0.5, support.getY() + 0.5, support.getZ() + 0.5);
                 if (eye.distanceTo(center) > reach) continue;
-                
-                // Try placement
+
                 int n = (int) Math.round(1 / STEP);
                 for (int r = 0; r <= n; r++) {
                     double v = r * STEP + (Math.random() * JIT * 2 - JIT);
                     if (v < 0) v = 0; else if (v > 1) v = 1;
-                    
+
                     for (int c = 0; c <= n; c++) {
                         double u = c * STEP + (Math.random() * JIT * 2 - JIT);
                         if (u < 0) u = 0; else if (u > 1) u = 1;
-                        
+
                         Vec3 hitPos = getHitPosOnFace(support, facing.getOpposite(), u, v);
                         float[] rot = getRotationsWrapped(eye, hitPos.xCoord, hitPos.yCoord, hitPos.zCoord);
-                        
+
                         MovingObjectPosition mop = rayTraceBlock(rot[0], rot[1], reach);
-                        if (mop != null 
+                        if (mop != null
                                 && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK
                                 && mop.getBlockPos().equals(support)
                                 && mop.sideHit == facing.getOpposite()) {
-                            
+
                             targetBlock = support;
                             targetFacing = facing.getOpposite();
                             targetHitVec = mop.hitVec;
@@ -525,7 +521,7 @@ public class AutoBlockIn extends Module {
         double x = block.getX() + 0.5;
         double y = block.getY() + 0.5;
         double z = block.getZ() + 0.5;
-        
+
         switch (face) {
             case DOWN:
                 y = block.getY() + INSET;
@@ -558,14 +554,14 @@ public class AutoBlockIn extends Module {
                 y = block.getY() + v;
                 break;
         }
-        
+
         return new Vec3(x, y, z);
     }
 
     private boolean isAir(BlockPos pos) {
         Block block = mc.theWorld.getBlockState(pos).getBlock();
-        return block == Blocks.air 
-            || block == Blocks.water 
+        return block == Blocks.air
+            || block == Blocks.water
             || block == Blocks.flowing_water
             || block == Blocks.lava
             || block == Blocks.flowing_lava
@@ -575,14 +571,14 @@ public class AutoBlockIn extends Module {
     private void updateProgress() {
         Vec3 playerPos = mc.thePlayer.getPositionVector();
         BlockPos feetPos = new BlockPos(playerPos.xCoord, playerPos.yCoord, playerPos.zCoord);
-        
+
         int filled = 0;
         int total = 9;
-        
+
         if (!isAir(feetPos.up(2))) {
             filled++;
         }
-        
+
         for (int[] d : DIRS) {
             if (!isAir(feetPos.add(d[0], 0, d[2]))) {
                 filled++;
@@ -591,7 +587,7 @@ public class AutoBlockIn extends Module {
                 filled++;
             }
         }
-        
+
         progress = (float) filled / (float) total;
     }
 
@@ -608,14 +604,14 @@ public class AutoBlockIn extends Module {
     private MovingObjectPosition rayTraceBlock(float yaw, float pitch, double range) {
         float yawRad = (float) Math.toRadians(yaw);
         float pitchRad = (float) Math.toRadians(pitch);
-        
+
         double x = -Math.sin(yawRad) * Math.cos(pitchRad);
         double y = -Math.sin(pitchRad);
         double z = Math.cos(yawRad) * Math.cos(pitchRad);
-        
+
         Vec3 start = mc.thePlayer.getPositionEyes(1.0f);
         Vec3 end = start.addVector(x * range, y * range, z * range);
-        
+
         return mc.theWorld.rayTraceBlocks(start, end);
     }
 
@@ -629,15 +625,15 @@ public class AutoBlockIn extends Module {
         double minX = x, maxX = x + 1;
         double minY = y, maxY = y + 1;
         double minZ = z, maxZ = z + 1;
-        
+
         double cx = clamp(p.xCoord, minX, maxX);
         double cy = clamp(p.yCoord, minY, maxY);
         double cz = clamp(p.zCoord, minZ, maxZ);
-        
+
         double dx = p.xCoord - cx;
         double dy = p.yCoord - cy;
         double dz = p.zCoord - cz;
-        
+
         return dx*dx + dy*dy + dz*dz;
     }
 
@@ -650,12 +646,12 @@ public class AutoBlockIn extends Module {
         double dy = ty - eye.yCoord;
         double dz = tz - eye.zCoord;
         double hd = Math.sqrt(dx*dx + dz*dz);
-        
+
         float yaw = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90.0f;
         yaw = normYaw(yaw);
-        
+
         float pitch = (float) Math.toDegrees(-Math.atan2(dy, hd));
-        
+
         return new float[]{yaw, pitch};
     }
 
@@ -671,7 +667,7 @@ public class AutoBlockIn extends Module {
     private static class BlockData {
         BlockPos pos;
         double distance;
-        
+
         BlockData(BlockPos pos, double distance) {
             this.pos = pos;
             this.distance = distance;

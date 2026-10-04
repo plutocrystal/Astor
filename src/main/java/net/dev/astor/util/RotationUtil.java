@@ -1,6 +1,6 @@
 package net.dev.astor.util;
 
-import net.dev.astor.mixin.IAccessorEntity;
+import net.dev.astor.mixin.movement.IAccessorEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;

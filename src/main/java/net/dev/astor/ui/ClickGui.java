@@ -112,10 +112,6 @@ public class ClickGui extends GuiScreen {
         }
     }
 
-    /**
-     * While a key is being bound every click belongs to that bind, otherwise the click could
-     * toggle the module that happens to sit underneath.
-     */
     private boolean handleActiveBinding(int x, int y, int button) {
         for (CategoryComponent category : categoryList) {
             if (!category.isOpened()) continue;

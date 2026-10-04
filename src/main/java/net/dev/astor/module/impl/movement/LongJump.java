@@ -13,7 +13,7 @@ import net.dev.astor.event.events.impl.movement.StrafeEvent;
 import net.dev.astor.event.events.impl.player.TickEvent;
 import net.dev.astor.event.events.impl.player.UpdateEvent;
 import net.dev.astor.management.RotationState;
-import net.dev.astor.mixin.IAccessorPlayerControllerMP;
+import net.dev.astor.mixin.attack.IAccessorPlayerControllerMP;
 import net.dev.astor.module.Module;
 import net.dev.astor.util.*;
 import net.dev.astor.property.properties.FloatProperty;

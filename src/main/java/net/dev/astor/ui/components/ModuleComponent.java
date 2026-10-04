@@ -1,4 +1,3 @@
-
 package net.dev.astor.ui.components;
 
 import net.dev.astor.Astor;
@@ -61,7 +60,7 @@ public class ModuleComponent implements Component {
                     y += c.getHeight();
                 } else if (baseProperty instanceof ColorProperty) {
                     ColorProperty property = (ColorProperty) baseProperty;
-                    ColorSliderComponent c = new ColorSliderComponent(property, this, y);
+                    ColorPickerComponent c = new ColorPickerComponent(property, this, y);
                     this.settings.add(c);
                     y += c.getHeight();
                 } else if (baseProperty instanceof TextProperty) {
@@ -109,7 +108,6 @@ public class ModuleComponent implements Component {
                 }
             }
         }
-
 
     }
 
@@ -185,7 +183,6 @@ public class ModuleComponent implements Component {
     public boolean isHovered(int x, int y) {
         return x > this.category.getX() && x < this.category.getX() + this.category.getWidth() && y > this.category.getY() + this.offsetY && y < this.category.getY() + 16 + this.offsetY;
     }
-
 
     @Override
     public boolean isVisible() {

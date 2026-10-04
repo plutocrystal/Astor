@@ -4,7 +4,7 @@ import net.dev.astor.module.Category;
 import net.dev.astor.event.EventTarget;
 import net.dev.astor.event.types.EventType;
 import net.dev.astor.event.events.impl.player.TickEvent;
-import net.dev.astor.mixin.IAccessorMinecraft;
+import net.dev.astor.mixin.client.IAccessorMinecraft;
 import net.dev.astor.module.Module;
 import net.dev.astor.util.BlockUtil;
 import net.dev.astor.util.RotationUtil;

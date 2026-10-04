@@ -6,7 +6,7 @@ import net.dev.astor.event.types.EventType;
 import net.dev.astor.event.events.impl.player.LoadWorldEvent;
 import net.dev.astor.event.events.impl.network.PacketEvent;
 import net.dev.astor.event.events.impl.render.Render3DEvent;
-import net.dev.astor.mixin.IAccessorMinecraft;
+import net.dev.astor.mixin.client.IAccessorMinecraft;
 import net.dev.astor.module.Module;
 import net.dev.astor.util.RenderUtil;
 import net.dev.astor.property.properties.*;

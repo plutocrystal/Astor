@@ -2,7 +2,7 @@ package net.dev.astor.util;
 
 import net.dev.astor.Astor;
 import net.dev.astor.management.RotationState;
-import net.dev.astor.module.impl.combat.TargetStrafe;
+import net.dev.astor.module.impl.movement.TargetStrafe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.BlockPos;

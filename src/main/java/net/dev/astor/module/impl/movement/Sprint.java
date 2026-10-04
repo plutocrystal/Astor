@@ -3,7 +3,7 @@ package net.dev.astor.module.impl.movement;
 import net.dev.astor.module.Category;
 import net.dev.astor.event.EventTarget;
 import net.dev.astor.event.events.impl.player.TickEvent;
-import net.dev.astor.mixin.IAccessorEntityLivingBase;
+import net.dev.astor.mixin.player.IAccessorEntityLivingBase;
 import net.dev.astor.module.Module;
 import net.dev.astor.util.KeyBindUtil;
 import net.dev.astor.property.properties.BooleanProperty;

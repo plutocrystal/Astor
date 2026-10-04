@@ -6,7 +6,7 @@ import net.dev.astor.event.EventTarget;
 import net.dev.astor.event.types.EventType;
 import net.dev.astor.event.events.impl.player.UpdateEvent;
 import net.dev.astor.event.events.impl.player.WindowClickEvent;
-import net.dev.astor.mixin.IAccessorItemSword;
+import net.dev.astor.mixin.item.IAccessorItemSword;
 import net.dev.astor.module.Module;
 import net.dev.astor.util.ChatUtil;
 import net.dev.astor.util.ItemUtil;

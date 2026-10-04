@@ -8,7 +8,7 @@ import net.dev.astor.event.events.impl.input.LeftClickMouseEvent;
 import net.dev.astor.event.events.impl.input.RightClickMouseEvent;
 import net.dev.astor.event.events.impl.player.SwapItemEvent;
 import net.dev.astor.event.events.impl.player.TickEvent;
-import net.dev.astor.mixin.IAccessorPlayerControllerMP;
+import net.dev.astor.mixin.attack.IAccessorPlayerControllerMP;
 import net.dev.astor.module.Module;
 import net.dev.astor.util.PacketUtil;
 import net.dev.astor.util.TimerUtil;

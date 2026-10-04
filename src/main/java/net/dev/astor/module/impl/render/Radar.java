@@ -32,7 +32,8 @@ public class Radar extends Module {
     public final BooleanProperty showEnemies = new BooleanProperty("Enemies", true);
     public final BooleanProperty showBots = new BooleanProperty("Bots", false);
     public final BooleanProperty showPVP = new BooleanProperty("ShowPvp", false);
-    public final ColorProperty fillColor = new ColorProperty("FillColor", Color.GRAY.getRGB());
+
+    public final ColorProperty fillColor = new ColorProperty("FillColor", 0x64808080);
     public final ColorProperty outlineColor = new ColorProperty("OutlineColor", Color.DARK_GRAY.getRGB());
     public final ColorProperty crossColor = new ColorProperty("CrossColor", Color.LIGHT_GRAY.getRGB());
     public Radar() {
@@ -109,8 +110,8 @@ public class Radar extends Module {
         double cos = Math.cos(yaw);
         double sin = Math.sin(yaw);
 
-        Color fill = new Color(fillColor.getValue());
-        this.drawRadarCircle(0.0, 0, yaw, radarRadius.getValue(), 64, new Color(fill.getRed(),fill.getGreen(),fill.getBlue(),100).getRGB(), outlineColor.getValue(), crossColor.getValue());
+        Color fill = new Color(fillColor.getValue(), true);
+        this.drawRadarCircle(0.0, 0, yaw, radarRadius.getValue(), 64, new Color(fill.getRed(),fill.getGreen(),fill.getBlue(),fill.getAlpha()).getRGB(), outlineColor.getValue(), crossColor.getValue());
         for (EntityPlayer player : TeamUtil.getLoadedEntitiesSorted().stream().filter(entity -> entity instanceof EntityPlayer && this.shouldRender((EntityPlayer) entity)).map(EntityPlayer.class::cast).collect(Collectors.toList())) {
             double dx = (player.lastTickPosX + (player.posX - player.lastTickPosX) * event.getPartialTicks()) - mc.thePlayer.posX;
             double dz = (player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * event.getPartialTicks()) - mc.thePlayer.posZ;

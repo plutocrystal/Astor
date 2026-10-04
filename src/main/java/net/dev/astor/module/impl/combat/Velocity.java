@@ -10,7 +10,7 @@ import net.dev.astor.event.events.impl.player.LivingUpdateEvent;
 import net.dev.astor.event.events.impl.player.LoadWorldEvent;
 import net.dev.astor.event.events.impl.network.PacketEvent;
 import net.dev.astor.event.events.impl.player.UpdateEvent;
-import net.dev.astor.mixin.IAccessorEntity;
+import net.dev.astor.mixin.movement.IAccessorEntity;
 import net.dev.astor.module.Module;
 import net.dev.astor.module.impl.movement.LongJump;
 import net.dev.astor.property.properties.BooleanProperty;

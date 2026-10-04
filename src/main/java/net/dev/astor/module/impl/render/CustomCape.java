@@ -1,6 +1,6 @@
 package net.dev.astor.module.impl.render;
 
-import net.dev.astor.mixin.IAccessorMinecraft;
+import net.dev.astor.mixin.client.IAccessorMinecraft;
 import net.dev.astor.module.Category;
 import net.dev.astor.module.Module;
 import net.dev.astor.property.properties.ButtonProperty;

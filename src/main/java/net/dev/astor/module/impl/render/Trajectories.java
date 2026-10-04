@@ -3,7 +3,7 @@ package net.dev.astor.module.impl.render;
 import net.dev.astor.module.Category;
 import net.dev.astor.event.EventTarget;
 import net.dev.astor.event.events.impl.render.Render3DEvent;
-import net.dev.astor.mixin.IAccessorRenderManager;
+import net.dev.astor.mixin.render.IAccessorRenderManager;
 import net.dev.astor.module.Module;
 import net.dev.astor.util.RenderUtil;
 import net.dev.astor.property.properties.BooleanProperty;

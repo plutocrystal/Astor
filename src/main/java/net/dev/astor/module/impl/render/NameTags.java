@@ -5,7 +5,7 @@ import net.dev.astor.Astor;
 import net.dev.astor.enums.ChatColors;
 import net.dev.astor.event.EventTarget;
 import net.dev.astor.event.events.impl.render.Render3DEvent;
-import net.dev.astor.mixin.IAccessorRenderManager;
+import net.dev.astor.mixin.render.IAccessorRenderManager;
 import net.dev.astor.module.Module;
 import net.dev.astor.util.ColorUtil;
 import net.dev.astor.util.RenderUtil;

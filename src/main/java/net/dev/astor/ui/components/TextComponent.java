@@ -1,4 +1,3 @@
-
 package net.dev.astor.ui.components;
 
 import net.dev.astor.enums.ChatColors;
@@ -27,7 +26,6 @@ public class TextComponent implements Component {
         this.y = parentModule.category.getY() + parentModule.offsetY;
         this.offsetY = offsetY;
     }
-
 
     public void draw(AtomicInteger offset) {
         GL11.glPushMatrix();
@@ -71,7 +69,6 @@ public class TextComponent implements Component {
     public boolean isHovered(int x, int y) {
         return x > this.x && x < this.x + this.module.category.getWidth() && y > this.y && y < this.y + 11;
     }
-
 
     @Override
     public boolean isVisible() {

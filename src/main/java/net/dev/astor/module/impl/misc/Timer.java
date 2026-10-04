@@ -4,7 +4,7 @@ import net.dev.astor.Astor;
 import net.dev.astor.event.EventTarget;
 import net.dev.astor.event.events.impl.player.TickEvent;
 import net.dev.astor.event.types.EventType;
-import net.dev.astor.mixin.IAccessorMinecraft;
+import net.dev.astor.mixin.client.IAccessorMinecraft;
 import net.dev.astor.module.Category;
 import net.dev.astor.module.Module;
 import net.dev.astor.module.impl.movement.NoFall;
@@ -15,11 +15,6 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
-/**
- * Drives the game speed through Timer.timerSpeed, which runGameLoop multiplies into the amount of
- * ticks it runs per frame. Only the client's tick rate moves, movement input and the outgoing
- * packet cadence are untouched.
- */
 public class Timer extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
     private static final DecimalFormat df = new DecimalFormat("0.0#", new DecimalFormatSymbols(Locale.US));
@@ -29,11 +24,6 @@ public class Timer extends Module {
         super("Timer", Category.MISC, false);
     }
 
-/**
- * NoFall reaches for the same field to halve the fall, so the multiplier is halved for as long
- * as that lasts instead of the two of them overwriting each other. A speed of zero would leave
- * elapsedPartialTicks below one forever and stop the game outright, hence the floor.
- */
     private float getSpeed() {
         NoFall noFall = (NoFall) Astor.moduleManager.modules.get(NoFall.class);
         float speed = this.multiplier.getValue() * (noFall != null && noFall.isSlowFalling() ? 0.5F : 1.0F);

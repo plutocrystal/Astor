@@ -1,7 +1,7 @@
 package net.dev.astor.util;
 
 import com.google.common.collect.Multimap;
-import net.dev.astor.mixin.IAccessorItemSword;
+import net.dev.astor.mixin.item.IAccessorItemSword;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.enchantment.Enchantment;

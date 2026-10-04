@@ -4,7 +4,7 @@ import net.dev.astor.module.Category;
 import net.dev.astor.Astor;
 import net.dev.astor.event.EventTarget;
 import net.dev.astor.event.events.impl.render.Render3DEvent;
-import net.dev.astor.mixin.IAccessorRenderManager;
+import net.dev.astor.mixin.render.IAccessorRenderManager;
 import net.dev.astor.module.Module;
 import net.dev.astor.util.RenderUtil;
 import net.dev.astor.property.properties.*;
@@ -29,14 +29,13 @@ public class BedESP extends Module {
     public final ModeProperty mode = new ModeProperty("Mode", 0, new String[]{"Default", "Full"});
     public final ModeProperty color = new ModeProperty("Color", 0, new String[]{"Custom", "Hud"});
     public final ColorProperty customColor;
-    public final PercentProperty opacity;
     public final BooleanProperty outline;
     public final BooleanProperty obsidian;
 
     private Color getColor() {
         switch (this.color.getValue()) {
             case 0:
-                return new Color(this.customColor.getValue());
+                return new Color(this.customColor.getValue(), true);
             case 1:
                 return ((HUD) Astor.moduleManager.modules.get(HUD.class)).getColor(System.currentTimeMillis());
             default:
@@ -62,8 +61,7 @@ public class BedESP extends Module {
 
     public BedESP() {
         super("BedESP", Category.RENDER, false);
-        this.customColor = new ColorProperty("CustomColor", (int) 8085714755840333141L, () -> this.color.getValue() == 0);
-        this.opacity = new PercentProperty("Opacity", 25);
+        this.customColor = new ColorProperty("CustomColor", 0xFFFF5555, () -> this.color.getValue() == 0);
         this.outline = new BooleanProperty("Outline", false);
         this.obsidian = new BooleanProperty("Obsidian", true);
     }
@@ -126,13 +124,15 @@ public class BedESP extends Module {
                                 );
                         Color color = this.getColor();
                         if (this.outline.getValue()) {
-                            RenderUtil.drawBoundingBox(aabb, color.getRed(), color.getGreen(), color.getBlue(), 255, 1.5F);
+                            RenderUtil.drawBoundingBox(aabb, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), 1.5F);
                         }
+
                         RenderUtil.drawFilledBox(
                                 aabb,
                                 color.getRed(),
                                 color.getGreen(),
-                                color.getBlue()
+                                color.getBlue(),
+                                color.getAlpha()
                         );
                     }
                 } else {

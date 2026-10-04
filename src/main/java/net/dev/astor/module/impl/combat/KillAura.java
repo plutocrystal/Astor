@@ -18,7 +18,7 @@ import net.dev.astor.event.events.impl.input.RightClickMouseEvent;
 import net.dev.astor.event.events.impl.player.TickEvent;
 import net.dev.astor.event.events.impl.player.UpdateEvent;
 import net.dev.astor.management.RotationState;
-import net.dev.astor.mixin.IAccessorPlayerControllerMP;
+import net.dev.astor.mixin.attack.IAccessorPlayerControllerMP;
 import net.dev.astor.module.Module;
 import net.dev.astor.module.impl.misc.BedNuker;
 import net.dev.astor.module.impl.player.AutoBlockIn;
@@ -376,7 +376,7 @@ public class KillAura extends Module {
                 boolean swap = false;
                 if (block) {
                     switch (this.autoBlock.getValue()) {
-                        case 0: // NONE
+                        case 0:
                             if (PlayerUtil.isUsingItem()) {
                                 this.isBlocking = true;
                                 if (!this.isPlayerBlocking() && !Astor.playerStateManager.digging && !Astor.playerStateManager.placing) {
@@ -391,7 +391,7 @@ public class KillAura extends Module {
                             Astor.blinkManager.setBlinkState(false, BlinkModules.AUTO_BLOCK);
                             this.fakeBlockState = false;
                             break;
-                        case 1: // FAKE
+                        case 1:
                             Astor.blinkManager.setBlinkState(false, BlinkModules.AUTO_BLOCK);
                             this.isBlocking = false;
                             this.fakeBlockState = this.hasValidTarget();

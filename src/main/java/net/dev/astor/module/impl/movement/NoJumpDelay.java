@@ -5,7 +5,7 @@ import net.dev.astor.event.EventTarget;
 import net.dev.astor.event.types.EventType;
 import net.dev.astor.event.types.Priority;
 import net.dev.astor.event.events.impl.player.TickEvent;
-import net.dev.astor.mixin.IAccessorEntityLivingBase;
+import net.dev.astor.mixin.player.IAccessorEntityLivingBase;
 import net.dev.astor.module.Module;
 import net.dev.astor.property.properties.IntProperty;
 import net.minecraft.client.Minecraft;

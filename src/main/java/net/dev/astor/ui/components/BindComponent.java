@@ -76,7 +76,8 @@ public class BindComponent implements Component {
             return false;
         }
         if (keyCode == Keyboard.KEY_ESCAPE) {
-            this.stopBinding();
+
+            this.setBind(0);
             return true;
         }
         if (keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_NUMPADENTER) {
@@ -95,6 +96,8 @@ public class BindComponent implements Component {
                     break;
                 }
             }
+        } else if (this.parentModule.mod.getKey() != 0) {
+            ChatUtil.sendFormatted(String.format("%sUnbound &o%s&r", Astor.clientName, this.parentModule.mod.getName()));
         }
         this.parentModule.mod.setKey(key);
         this.stopBinding();

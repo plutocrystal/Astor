@@ -2,16 +2,24 @@ package net.dev.astor.command.commands;
 
 import net.dev.astor.Astor;
 import net.dev.astor.command.Command;
+import net.dev.astor.command.ModuleValueCommand;
 import net.dev.astor.module.Module;
 import net.dev.astor.util.ChatUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 
 public class ToggleCommand extends Command {
     public ToggleCommand() {
         super(new ArrayList<>(Arrays.asList("toggle", "t")));
+    }
+
+    @Override
+    public List<String> complete(String[] args) {
+        return args.length == 1 ? new ModuleValueCommand().moduleNames() : Collections.emptyList();
     }
 
     @Override

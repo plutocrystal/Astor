@@ -6,7 +6,7 @@ import net.dev.astor.enums.ChatColors;
 import net.dev.astor.event.EventTarget;
 import net.dev.astor.event.events.impl.render.Render2DEvent;
 import net.dev.astor.event.events.impl.render.Render3DEvent;
-import net.dev.astor.mixin.IAccessorMinecraft;
+import net.dev.astor.mixin.client.IAccessorMinecraft;
 import net.dev.astor.module.Module;
 import net.dev.astor.util.RenderUtil;
 import net.dev.astor.util.RotationUtil;
