@@ -13,6 +13,11 @@ import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 public class MCF extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
 
+    @Override
+    public String getDescription() {
+        return "Middle-click a player to add or remove them from your friends list.";
+    }
+
     public MCF() {
         super("MCF", Category.PLAYER, false, true);
     }

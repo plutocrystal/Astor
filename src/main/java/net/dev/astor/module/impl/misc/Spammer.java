@@ -15,8 +15,14 @@ public class Spammer extends Module {
     private final TimerUtil timer = new TimerUtil();
     private int charOffset = 19968;
     public final TextProperty text = new TextProperty("Text", "meow");
-    public final FloatProperty delay = new FloatProperty("Delay", 3.5F, 0.0F, 3600.0F);
+    /** Milliseconds. */
+    public final FloatProperty delay = new FloatProperty("Delay", 3500.0F, 0.0F, 3600000.0F, 0);
     public final IntProperty random = new IntProperty("Random", 0, 0, 10);
+
+    @Override
+    public String getDescription() {
+        return "Sends a chat message on a timer, optionally with random extra characters.";
+    }
 
     public Spammer() {
         super("Spammer", Category.MISC, false);
@@ -25,7 +31,7 @@ public class Spammer extends Module {
     @EventTarget
     public void onRender(Render2DEvent event) {
         if (this.isEnabled()) {
-            if (this.timer.hasTimeElapsed((long) (this.delay.getValue() * 1000.0F))) {
+            if (this.timer.hasTimeElapsed(this.delay.getValue().longValue())) {
                 this.timer.reset();
                 String text = this.text.getValue();
                 if (this.random.getValue() > 0) {

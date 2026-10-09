@@ -7,6 +7,11 @@ import net.dev.astor.property.properties.ColorProperty;
 public class Glint extends Module {
     public final ColorProperty color = new ColorProperty("Color", 0xFF8040CC);
 
+    @Override
+    public String getDescription() {
+        return "Changes the colour of the enchantment glint on your held item.";
+    }
+
     public Glint() {
         super("Glint", Category.RENDER, false);
     }

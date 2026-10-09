@@ -21,8 +21,18 @@ import java.util.Objects;
 public class Eagle extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
     private int sneakDelay = 0;
-    public final IntProperty minDelay = new IntProperty("MinDelay", 2, 0, 10);
-    public final IntProperty maxDelay = new IntProperty("MaxDelay", 3, 0, 10);
+
+    /**
+     * Milliseconds, held down before the next sneak release is attempted.
+     *
+     * <p>{@link #sneakDelay} is a tick counter, so the value is divided by 50 where it is rolled into
+     * it. That means anything under 50ms floors to zero ticks - the counter has no sub-tick
+     * resolution to store it in.</p>
+     */
+    public final IntProperty minDelay = new IntProperty("MinDelay", 100, 0, 500);
+
+    /** Milliseconds. See {@link #minDelay}. */
+    public final IntProperty maxDelay = new IntProperty("MaxDelay", 150, 0, 500);
     public final BooleanProperty directionCheck = new BooleanProperty("DirectionCheck", true);
     public final BooleanProperty jumpCheck = new BooleanProperty("JumpCheck", true);
     public final BooleanProperty pitchCheck = new BooleanProperty("PitchCheck", true);
@@ -48,6 +58,11 @@ public class Eagle extends Module {
         }
     }
 
+    @Override
+    public String getDescription() {
+        return "Taps sneak while bridging to fit under blocks you would otherwise collide with.";
+    }
+
     public Eagle() {
         super("Eagle", Category.MOVEMENT, false);
     }
@@ -59,7 +74,7 @@ public class Eagle extends Module {
                 this.sneakDelay--;
             }
             if (this.sneakDelay == 0 && this.canMoveSafely()) {
-                this.sneakDelay = RandomUtils.nextInt(this.minDelay.getValue(), this.maxDelay.getValue() + 1);
+                this.sneakDelay = RandomUtils.nextInt(this.minDelay.getValue() / 50, this.maxDelay.getValue() / 50 + 1);
             }
         }
     }

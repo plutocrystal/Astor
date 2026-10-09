@@ -16,6 +16,11 @@ public class InventoryClicker extends Module {
     public final IntProperty triggerTicks = new IntProperty("Ticks", 2, 0, 20);
     public int ticks;
 
+    @Override
+    public String getDescription() {
+        return "Clicks inventory slots on a delay instead of holding the mouse down.";
+    }
+
     public InventoryClicker() {
         super("InventoryClicker", Category.MISC, false);
     }

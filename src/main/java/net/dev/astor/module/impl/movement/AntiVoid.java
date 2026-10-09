@@ -36,6 +36,11 @@ public class AntiVoid extends Module {
         return !longJump.isJumping();
     }
 
+    @Override
+    public String getDescription() {
+        return "Stops you falling into the void by pulling you back when you end up below the world.";
+    }
+
     public AntiVoid() {
         super("AntiVoid", Category.MOVEMENT, false);
     }

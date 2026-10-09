@@ -8,6 +8,7 @@ import net.dev.astor.event.events.impl.attack.HitBlockEvent;
 import net.dev.astor.event.events.impl.input.KeyEvent;
 import net.dev.astor.event.events.impl.input.LeftClickMouseEvent;
 import net.dev.astor.event.events.impl.player.LoadWorldEvent;
+import net.dev.astor.event.events.impl.render.GameLoopEvent;
 import net.dev.astor.event.events.impl.render.ResizeEvent;
 import net.dev.astor.event.events.impl.input.RightClickMouseEvent;
 import net.dev.astor.event.events.impl.player.SwapItemEvent;
@@ -57,6 +58,8 @@ public abstract class MixinMinecraft {
     public GuiScreen currentScreen;
     @Shadow
     public GameSettings gameSettings;
+    @Shadow
+    public net.minecraft.util.Timer timer;
 
     @Inject(
             method = {"startGame"},
@@ -181,6 +184,36 @@ public abstract class MixinMinecraft {
     private void frameInput(CallbackInfo callbackInfo) {
         this.pumpGuiInput();
         this.pumpKeyEvents();
+    }
+
+    /**
+     * HEAD rather than TAIL so a speed written here is picked up by this frame's timer.updateTimer()
+     * instead of the next one. Dispatching before the tick loop is also what lets a listener run at all
+     * when a previous listener has already pinned the tick counter at zero.
+     */
+    @Inject(
+            method = {"runGameLoop"},
+            at = {@At("HEAD")}
+    )
+    private void gameLoop(CallbackInfo callbackInfo) {
+        GameLoopEvent event = new GameLoopEvent(this.timer.timerSpeed);
+        EventManager.call(event);
+        this.timer.timerSpeed = event.getTimerSpeed();
+    }
+
+    @Redirect(
+            method = {"runGameLoop"},
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/entity/EntityPlayerSP;isEntityInsideOpaqueBlock()Z"
+            )
+    )
+    private boolean keepPerspectiveInsideBlock(EntityPlayerSP entityPlayerSP) {
+        // Vanilla reads this and, when true, runs `gameSettings.thirdPersonView = 0` - it overwrites
+        // the player's own perspective every frame the camera clips into terrain and never puts it
+        // back, so suffocating or being shoved into a wall silently forces first person for good.
+        // Always reporting "not inside a block" makes that branch never execute.
+        return false;
     }
 
     private void pumpGuiInput() {

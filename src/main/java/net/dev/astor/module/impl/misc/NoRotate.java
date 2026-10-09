@@ -19,6 +19,11 @@ public class NoRotate extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
     private boolean reset = false;
 
+    @Override
+    public String getDescription() {
+        return "Stops the server from turning your head, so packet-driven rotations are not overwritten.";
+    }
+
     public NoRotate() {
         super("NoRotate", Category.MISC, false);
     }

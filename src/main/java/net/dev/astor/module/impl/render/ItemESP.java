@@ -104,6 +104,11 @@ public class ItemESP extends Module {
         }
     }
 
+    @Override
+    public String getDescription() {
+        return "Marks dropped items so you can find them through walls.";
+    }
+
     public ItemESP() {
         super("ItemESP", Category.RENDER, false);
     }

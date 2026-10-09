@@ -6,7 +6,7 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
-import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
+
 import net.minecraft.client.renderer.entity.RenderEntityItem;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -30,7 +30,16 @@ import java.util.Random;
 
 @SideOnly(Side.CLIENT)
 @Mixin(value = {RenderEntityItem.class}, priority = 9999)
+// Forge deprecates ItemCameraTransforms/IBakedModel#getItemCameraTransforms(), but 1.8.9 offers no
+// non-deprecated way to read the GROUND transform (needed for the item spacing/offset maths below),
+// so those deprecated calls are unavoidable here.
+@SuppressWarnings("deprecation")
 public abstract class MixinRenderEntityItem extends MixinRender {
+    // Written out in full rather than imported: javac reports a deprecation warning on the import
+    // itself (once per annotation-processing round) and import warnings cannot be suppressed.
+    private static final net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType GROUND =
+            net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType.GROUND;
+
     @Shadow
     private Random field_177079_e;
     @Shadow
@@ -40,10 +49,10 @@ public abstract class MixinRenderEntityItem extends MixinRender {
         throw new AssertionError();
     }
 
-    @Shadow
+    @Shadow(remap = false)
     public abstract boolean shouldBob();
 
-    @Shadow
+    @Shadow(remap = false)
     public abstract boolean shouldSpreadItems();
 
     @Inject(
@@ -85,7 +94,7 @@ public abstract class MixinRenderEntityItem extends MixinRender {
                 }
                 float scale = 0.5F * itemPhysics.getScale();
                 GlStateManager.scale(scale, scale, scale);
-                model = ForgeHooksClient.handleCameraTransforms(model, ItemCameraTransforms.TransformType.GROUND);
+                model = ForgeHooksClient.handleCameraTransforms(model, GROUND);
                 this.itemRenderer.renderItem(stack, model);
                 GlStateManager.popMatrix();
             } else {
@@ -102,7 +111,7 @@ public abstract class MixinRenderEntityItem extends MixinRender {
                 }
                 float scale = itemPhysics.getScale();
                 GlStateManager.scale(scale, scale, scale);
-                model = ForgeHooksClient.handleCameraTransforms(model, ItemCameraTransforms.TransformType.GROUND);
+                model = ForgeHooksClient.handleCameraTransforms(model, GROUND);
                 this.itemRenderer.renderItem(stack, model);
                 GlStateManager.popMatrix();
                 float step = itemPhysics.is17Mode()
@@ -139,7 +148,7 @@ public abstract class MixinRenderEntityItem extends MixinRender {
                 : (this.shouldBob()
                 ? MathHelper.sin((entity.getAge() + partialTicks) / 10.0F + entity.hoverStart) * 0.1F + 0.1F
                 : 0.0F);
-        float modelScale = model.getItemCameraTransforms().getTransform(ItemCameraTransforms.TransformType.GROUND).scale.y;
+        float modelScale = model.getItemCameraTransforms().getTransform(GROUND).scale.y;
         if (itemPhysics.is17Mode() && !is3D) {
             GlStateManager.translate((float) x, (float) y + bob + 0.05F * modelScale + 0.2F, (float) z);
         } else if (itemPhysics.isPhysicsMode()) {
@@ -199,25 +208,33 @@ public abstract class MixinRenderEntityItem extends MixinRender {
         GlStateManager.rotate(this.renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
         GlStateManager.scale(-0.02F, -0.02F, 0.02F);
         GlStateManager.translate(-8.0F, 0.0F, 0.0F);
+        // Mirror RenderItem#renderItemOverlayIntoGUI, the only stack-count text path vanilla 1.8.9
+        // actually has (the gui one - it draws no world-space count at all). disableDepth is what
+        // lets the label survive the item geometry that was just drawn in front of it.
         GlStateManager.disableLighting();
-        GlStateManager.enableBlend();
-        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+        GlStateManager.disableDepth();
         if (drawDurability) {
             int width = (int) Math.round(13.0D - (double) stack.getItemDamage() * 13.0D / (double) stack.getMaxDamage());
             int green = (int) Math.round(255.0D - (double) stack.getItemDamage() * 255.0D / (double) stack.getMaxDamage());
             GlStateManager.disableTexture2D();
+            GlStateManager.disableAlpha();
+            GlStateManager.disableBlend();
             this.drawOverlayQuad(2, 13, 13, 2, 0, 0, 0, 255);
             this.drawOverlayQuad(2, 13, 12, 1, (255 - green) / 4, 64, 0, 255);
             this.drawOverlayQuad(2, 13, width, 1, 255 - green, green, 0, 255);
+            GlStateManager.enableBlend();
+            GlStateManager.enableAlpha();
             GlStateManager.enableTexture2D();
         }
         if (drawCount) {
             String text = String.valueOf(stack.stackSize);
+            GlStateManager.disableBlend();
             fontRenderer.drawStringWithShadow(text, 17.0F - (float) fontRenderer.getStringWidth(text), 9.0F, 16777215);
+            GlStateManager.enableBlend();
         }
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.enableDepth();
         GlStateManager.enableLighting();
-        GlStateManager.disableBlend();
         GlStateManager.popMatrix();
     }
 

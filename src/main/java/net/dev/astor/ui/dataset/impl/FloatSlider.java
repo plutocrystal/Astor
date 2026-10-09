@@ -56,7 +56,7 @@ public class FloatSlider extends Slider {
 
     @Override
     public double getIncrement() {
-        return 0.1;
+        return property.getStep();
     }
 
     @Override
@@ -66,12 +66,16 @@ public class FloatSlider extends Slider {
 
     @Override
     public void stepping(boolean increment) {
-        if (increment) {
-            if (property.getValue() >= property.getMaximum()) return;
-            property.setValue(Math.round(property.getValue() * 10 + 1) / 10.0F);
-        } else {
-            if (property.getValue() <= property.getMinimum()) return;
-            property.setValue(Math.round(property.getValue() * 10 - 1) / 10.0F);
+        // The scale has to follow the property's precision - hardcoding 10 flattened every slider to one
+        // decimal place, so a 0.01 minimum could only ever be reached as 0.1.
+        float scale = (float) Math.pow(10.0D, property.getPrecision());
+        float current = property.getValue();
+        float next = Math.round(current * scale + (increment ? 1.0F : -1.0F)) / scale;
+        // Clamping instead of only bailing at the limit: the old check still let the final step overshoot
+        // (0.95 became 1.1 with a 0.1 step), and FloatProperty does not enforce its own range.
+        next = Math.max(property.getMinimum(), Math.min(property.getMaximum(), next));
+        if (next != current) {
+            property.setValue(next);
         }
     }
 }

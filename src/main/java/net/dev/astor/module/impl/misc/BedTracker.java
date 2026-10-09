@@ -98,6 +98,11 @@ public class BedTracker extends Module {
         return blockPos != null && mc.theWorld.getBlockState(blockPos).getBlock() == Blocks.bed;
     }
 
+    @Override
+    public String getDescription() {
+        return "Watches nearby beds and players, alerting you about enemies and optionally running a chat macro on them.";
+    }
+
     public BedTracker() {
         super("BedTracker", Category.MISC, false, true);
         this.executor = Executors.newScheduledThreadPool(1);
@@ -115,12 +120,14 @@ public class BedTracker extends Module {
         this.alertRange = new IntProperty("AlertsRange", 48, 8, 128, this.alerts::getValue);
         this.alertOnPearl = new BooleanProperty("AlertsOnPearl", true);
         this.alertSound = new ModeProperty("AlertsSound", 1, new String[]{"None", "Meow", "Anvil"}, () -> this.alerts.getValue() || this.alertOnPearl.getValue());
-        this.alertFrequency = new IntProperty("AlertsFrequency", 5, 1, 30, () -> this.alerts.getValue() || this.alertOnPearl.getValue());
+        /** Milliseconds between repeat alerts. */
+        this.alertFrequency = new IntProperty("AlertsFrequency", 5000, 1000, 30000, () -> this.alerts.getValue() || this.alertOnPearl.getValue());
         this.marco = new BooleanProperty("Macro", false);
         this.marcoRange = new IntProperty("MacroRange", 24, 8, 128, this.marco::getValue);
         this.marcoOnPreal = new BooleanProperty("MacroOnPearl", false);
         this.marcoText = new TextProperty("MacroText", "/lobby", () -> this.marco.getValue() || this.marcoOnPreal.getValue());
-        this.marcoDelay = new IntProperty("MacroDelay", 1, 1, 10, () -> this.marco.getValue() || this.marcoOnPreal.getValue());
+        /** Milliseconds to wait before the chat macro fires again. */
+        this.marcoDelay = new IntProperty("MacroDelay", 1000, 1000, 10000, () -> this.marco.getValue() || this.marcoOnPreal.getValue());
         this.hud = new BooleanProperty("Hud", true);
         this.hudPosX = new ModeProperty("HudPositionX", 0, new String[]{"Left", "Middle", "Right"}, this.hud::getValue);
         this.hudPosY = new ModeProperty("HudPositionY", 0, new String[]{"Top", "Middle", "Bottom"}, this.hud::getValue);
@@ -145,7 +152,7 @@ public class BedTracker extends Module {
                             ChatUtil.sendFormatted(String.format("%s%s: &fDetected &5Ender Pearl&r &e&l⚠&r", Astor.clientName, this.getName()));
                             pearl = true;
                         }
-                        if (this.marcoOnPreal.getValue() && this.lastMarcoTime + (long) this.marcoDelay.getValue() * 1000L <= millis) {
+                        if (this.marcoOnPreal.getValue() && this.lastMarcoTime + (long) this.marcoDelay.getValue() <= millis) {
                             this.lastMarcoTime = millis;
                             marco = true;
                         }
@@ -157,44 +164,43 @@ public class BedTracker extends Module {
                     .stream()
                     .filter(entity -> entity instanceof EntityPlayer)
                     .map(entity -> (EntityPlayer) entity)
-                    .filter(entityPlayer -> !TeamUtil.isBot(entityPlayer) && !this.whitelistedPlayers.contains(entityPlayer.getName()))
+                    .filter(entityPlayer -> !this.whitelistedPlayers.contains(entityPlayer.getName()))
+                    // Friends and teammates are not raiding us, so they must not raise the bed alarm
+                    // or trigger the macro.
+                    .filter(entityPlayer -> !Target.get().isFriendOrTeammate(entityPlayer))
                     .collect(Collectors.toList())) {
-                if (TeamUtil.isSameTeam(player)) {
-                    this.whitelistedPlayers.add(player.getName());
-                } else {
-                    double distance = player.getDistance((double) this.bedPos.getX() + 0.5, (double) this.bedPos.getY() + 0.5, (double) this.bedPos.getZ() + 0.5);
-                    String name = player.getName();
-                    String text = player.getDisplayName().getFormattedText();
-                    ItemStack item = player.getHeldItem();
-                    boolean isPearl = item != null && item.getItem() instanceof ItemEnderPearl;
-                    if (this.alerts.getValue() && distance < (double) this.alertRange.getValue()) {
-                        Long cooldown = this.alertCooldowns.get(name);
-                        if (cooldown == null || cooldown + (long) this.alertFrequency.getValue() * 1000L <= millis) {
-                            this.alertCooldowns.put(name, millis);
-                            ChatUtil.sendFormatted(
-                                    String.format("%s%s: %s&r &fis %d blocks away from your bed &e&l⚠&r", Astor.clientName, this.getName(), text, (int) distance + 1)
-                            );
-                            pearl = true;
-                        }
+                double distance = player.getDistance((double) this.bedPos.getX() + 0.5, (double) this.bedPos.getY() + 0.5, (double) this.bedPos.getZ() + 0.5);
+                String name = player.getName();
+                String text = player.getDisplayName().getFormattedText();
+                ItemStack item = player.getHeldItem();
+                boolean isPearl = item != null && item.getItem() instanceof ItemEnderPearl;
+                if (this.alerts.getValue() && distance < (double) this.alertRange.getValue()) {
+                    Long cooldown = this.alertCooldowns.get(name);
+                    if (cooldown == null || cooldown + (long) this.alertFrequency.getValue() <= millis) {
+                        this.alertCooldowns.put(name, millis);
+                        ChatUtil.sendFormatted(
+                                String.format("%s%s: %s&r &fis %d blocks away from your bed &e&l⚠&r", Astor.clientName, this.getName(), text, (int) distance + 1)
+                        );
+                        pearl = true;
                     }
-                    if (this.alertOnPearl.getValue() && isPearl) {
-                        Long cooldown = this.alertCooldowns.get(name);
-                        if (cooldown == null || cooldown + (long) this.alertFrequency.getValue() * 1000L <= millis) {
-                            this.alertCooldowns.put(name, millis);
-                            ChatUtil.sendFormatted(
-                                    String.format("%s%s: %s&r &fhas &5Ender Pearl&r &e&l⚠&r", Astor.clientName, this.getName(), text)
-                            );
-                            pearl = true;
-                        }
+                }
+                if (this.alertOnPearl.getValue() && isPearl) {
+                    Long cooldown = this.alertCooldowns.get(name);
+                    if (cooldown == null || cooldown + (long) this.alertFrequency.getValue() <= millis) {
+                        this.alertCooldowns.put(name, millis);
+                        ChatUtil.sendFormatted(
+                                String.format("%s%s: %s&r &fhas &5Ender Pearl&r &e&l⚠&r", Astor.clientName, this.getName(), text)
+                        );
+                        pearl = true;
                     }
-                    if ((
-                            this.marco.getValue() && distance < (double) this.marcoRange.getValue()
-                                    || this.marcoOnPreal.getValue() && isPearl
-                    )
-                            && this.lastMarcoTime + (long) this.marcoDelay.getValue() * 1000L <= millis) {
-                        this.lastMarcoTime = millis;
-                        marco = true;
-                    }
+                }
+                if ((
+                        this.marco.getValue() && distance < (double) this.marcoRange.getValue()
+                                || this.marcoOnPreal.getValue() && isPearl
+                )
+                        && this.lastMarcoTime + (long) this.marcoDelay.getValue() <= millis) {
+                    this.lastMarcoTime = millis;
+                    marco = true;
                 }
             }
             if (pearl) {

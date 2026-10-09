@@ -81,7 +81,7 @@ public class ColorPickerComponent implements Component {
 
     private void drawSelectionArea(int x, int y, int width) {
         for (int i = 0; i < width; i++) {
-            fill(x + i, y, 1, SQUARE_HEIGHT, Color.HSBtoRGB(0f, (float) i / (width - 1), 1f));
+            fill(x + i, y, 1, SQUARE_HEIGHT, Color.HSBtoRGB(hue, (float) i / (width - 1), 1f));
         }
         for (int j = 0; j < SQUARE_HEIGHT; j++) {
             int shade = Math.round((float) j / (SQUARE_HEIGHT - 1) * 255f) << 24;
@@ -111,7 +111,9 @@ public class ColorPickerComponent implements Component {
     }
 
     private static float hueAt(int column, int width) {
-        return (float) column / width;
+        // Divide by width - 1 so the bar covers the full 0..1 hue range; dividing by width left the
+        // last few degrees unreachable. Hue 1.0 renders the same red as hue 0.0, so no seam shows.
+        return width <= 1 ? 0f : (float) column / (width - 1);
     }
 
     private static int alphaAt(int column, int width) {

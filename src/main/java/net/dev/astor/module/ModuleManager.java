@@ -5,8 +5,8 @@ import net.dev.astor.event.EventTarget;
 import net.dev.astor.event.types.EventType;
 import net.dev.astor.event.events.impl.input.KeyEvent;
 import net.dev.astor.event.events.impl.player.TickEvent;
+import net.dev.astor.module.impl.render.ClickGui;
 import net.dev.astor.module.impl.render.ClientSetting;
-import net.dev.astor.module.impl.render.GuiModule;
 import net.dev.astor.util.ChatUtil;
 import net.dev.astor.util.SoundUtil;
 
@@ -72,7 +72,7 @@ public class ModuleManager {
             if (clientSetting != null && shouldNotify) {
                 shouldNotify = clientSetting.toggleAlerts.getValue();
             }
-            if(module instanceof GuiModule){
+            if(module instanceof ClickGui){
                 shouldNotify = false;
             }
             if (shouldNotify) {

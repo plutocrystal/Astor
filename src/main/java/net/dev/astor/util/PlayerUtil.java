@@ -2,6 +2,7 @@ package net.dev.astor.util;
 
 import net.dev.astor.Astor;
 import net.dev.astor.module.impl.movement.KeepSprint;
+import net.dev.astor.module.impl.render.Particles;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockAir;
 import net.minecraft.client.Minecraft;
@@ -197,10 +198,15 @@ public class PlayerUtil {
                             target.motionY = originalMotionY;
                             target.motionZ = originalMotionZ;
                         }
-                        if (isCritical) {
+                        // Same two loops MixinEntityPlayer runs on the vanilla path, with the same guards.
+                        // They live here rather than only in that mixin because this method is a second,
+                        // hand-written copy of EntityPlayer.attackTargetEntityWithCurrentItem and the
+                        // redirect never sees it - KillAura and AntiFireball attack through here, so
+                        // without it the module did nothing at all whenever either was on.
+                        for (int i = 0; i < Particles.getCriticalsMultiplier(isCritical); i++) {
                             mc.thePlayer.onCriticalHit(target);
                         }
-                        if (enchantmentBonus > 0.0F) {
+                        for (int i = 0; i < Particles.getSharpnessMultiplier(enchantmentBonus > 0.0F); i++) {
                             mc.thePlayer.onEnchantmentCritical(target);
                         }
                         if (baseDamage >= 18.0F) {

@@ -17,9 +17,14 @@ import net.minecraft.item.ItemStack;
 
 public class Refill extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
-    public final IntProperty delay = new IntProperty("Delay", 1, 0, 20);
+    public final IntProperty delay = new IntProperty("Delay", 50, 0, 1000);
     public final ModeProperty mode = new ModeProperty("Mode", 1, new String[]{"Soup", "Pot"});
     private final TimerUtil time = new TimerUtil();
+
+    @Override
+    public String getDescription() {
+        return "Refills your hotbar with soup or splash potions while the inventory is open.";
+    }
 
     public Refill() {
         super("Refill", Category.COMBAT, false);
@@ -38,7 +43,7 @@ public class Refill extends Module {
 
     private void refill(Item targetItem) {
         if (mc.currentScreen instanceof GuiInventory) {
-            if (!isHotbarFull() && this.time.hasTimeElapsed(delay.getValue() * 50)) {
+            if (!isHotbarFull() && this.time.hasTimeElapsed(delay.getValue().longValue())) {
                 for (int i = 9; i < 36; ++i) {
                     ItemStack itemstack = mc.thePlayer.inventoryContainer.getSlot(i).getStack();
                     if (itemstack != null && itemstack.getItem() == targetItem) {

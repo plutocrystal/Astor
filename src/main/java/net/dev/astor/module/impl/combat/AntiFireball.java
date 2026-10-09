@@ -12,7 +12,6 @@ import net.dev.astor.event.events.impl.player.TickEvent;
 import net.dev.astor.event.events.impl.player.UpdateEvent;
 import net.dev.astor.management.RotationState;
 import net.dev.astor.module.Module;
-import net.dev.astor.module.impl.render.HUD;
 import net.dev.astor.util.*;
 import net.dev.astor.property.properties.*;
 import net.dev.astor.property.properties.FloatProperty;
@@ -39,7 +38,6 @@ public class AntiFireball extends Module {
     public final BooleanProperty rotations = new BooleanProperty("Rotations", true);
     public final BooleanProperty swing = new BooleanProperty("Swing", true);
     public final ModeProperty moveFix = new ModeProperty("MoveFix", 1, new String[]{"None", "Silent", "Strict"});
-    public final ModeProperty showTarget = new ModeProperty("ShowTarget", 0, new String[]{"None", "Default", "Hud"});
 
     private boolean isValidTarget(EntityFireball entityFireball) {
         return !entityFireball.getEntityBoundingBox().hasNaN() && RotationUtil.distanceToEntity(entityFireball) <= (double) this.range.getValue() + 3.0
@@ -52,6 +50,11 @@ public class AntiFireball extends Module {
         } else {
             PacketUtil.sendPacket(new C0APacketAnimation());
         }
+    }
+
+    @Override
+    public String getDescription() {
+        return "Attacks incoming fireballs within range before they can hit you.";
     }
 
     public AntiFireball() {
@@ -124,28 +127,15 @@ public class AntiFireball extends Module {
 
     @EventTarget
     public void onRender(Render3DEvent event) {
-        if (this.isEnabled()) {
-            if (this.showTarget.getValue() != 0 && TeamUtil.isEntityLoaded(this.target)) {
-                Color color = new Color(-1);
-                switch (this.showTarget.getValue()) {
-                    case 1:
-                        double dist = (this.target.posX - this.target.lastTickPosX) * (mc.thePlayer.posX - this.target.posX)
-                                + (this.target.posY - this.target.lastTickPosY)
-                                * (mc.thePlayer.posY + (double) mc.thePlayer.getEyeHeight() - this.target.posY - (double) this.target.height / 2.0)
-                                + (this.target.posZ - this.target.lastTickPosZ) * (mc.thePlayer.posZ - this.target.posZ);
-                        if (dist < 0.0) {
-                            color = new Color(16733525);
-                        } else {
-                            color = new Color(5635925);
-                        }
-                        break;
-                    case 2:
-                        color = ((HUD) Astor.moduleManager.modules.get(HUD.class)).getColor(System.currentTimeMillis());
-                }
-                RenderUtil.enableRenderState();
-                RenderUtil.drawEntityBox(this.target, color.getRed(), color.getGreen(), color.getBlue());
-                RenderUtil.disableRenderState();
-            }
+        if (this.isEnabled() && TeamUtil.isEntityLoaded(this.target)) {
+            double dist = (this.target.posX - this.target.lastTickPosX) * (mc.thePlayer.posX - this.target.posX)
+                    + (this.target.posY - this.target.lastTickPosY)
+                    * (mc.thePlayer.posY + (double) mc.thePlayer.getEyeHeight() - this.target.posY - (double) this.target.height / 2.0)
+                    + (this.target.posZ - this.target.lastTickPosZ) * (mc.thePlayer.posZ - this.target.posZ);
+            Color color = new Color(dist < 0.0 ? 16733525 : 5635925);
+            RenderUtil.enableRenderState();
+            RenderUtil.drawEntityBox(this.target, color.getRed(), color.getGreen(), color.getBlue());
+            RenderUtil.disableRenderState();
         }
     }
 

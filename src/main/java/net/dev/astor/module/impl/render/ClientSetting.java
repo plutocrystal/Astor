@@ -20,6 +20,12 @@ public class ClientSetting extends Module {
             "ToggleSound", 0, SOUND_PACKS, () -> this.toggleSounds.getValue()
     );
     public final BooleanProperty toggleAlerts = new BooleanProperty("ToggleAlerts", false);
+    public final BooleanProperty boldShadow = new BooleanProperty("BoldShadow", true);
+
+    @Override
+    public String getDescription() {
+        return "Client-wide options: toggle sounds, alerts and text styling.";
+    }
 
     public ClientSetting() {
         super("ClientSetting", Category.RENDER, false);

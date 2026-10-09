@@ -20,6 +20,11 @@ public class Timer extends Module {
     private static final DecimalFormat df = new DecimalFormat("0.0#", new DecimalFormatSymbols(Locale.US));
     public final FloatProperty multiplier = new FloatProperty("Multiplier", 1.0F, 0.1F, 10.0F);
 
+    @Override
+    public String getDescription() {
+        return "Speeds the client game clock up or down without changing the tick rate.";
+    }
+
     public Timer() {
         super("Timer", Category.MISC, false);
     }

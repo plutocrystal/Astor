@@ -7,12 +7,13 @@ import net.dev.astor.event.types.Priority;
 import net.dev.astor.event.events.impl.input.LeftClickMouseEvent;
 import net.dev.astor.event.events.impl.player.TickEvent;
 import net.dev.astor.module.Module;
+import net.dev.astor.module.impl.misc.Target;
 import net.dev.astor.util.*;
 import net.dev.astor.property.properties.BooleanProperty;
 import net.dev.astor.property.properties.FloatProperty;
 import net.dev.astor.property.properties.IntProperty;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import net.minecraft.world.WorldSettings.GameType;
 
@@ -62,32 +63,30 @@ public class AutoClicker extends Module {
         }
     }
 
-    private boolean isValidTarget(EntityPlayer entityPlayer) {
-        if (entityPlayer != mc.thePlayer && entityPlayer != mc.thePlayer.ridingEntity) {
-            if (entityPlayer == mc.getRenderViewEntity() || entityPlayer == mc.getRenderViewEntity().ridingEntity) {
-                return false;
-            } else if (entityPlayer.deathTime > 0) {
-                return false;
-            } else {
-                float borderSize = entityPlayer.getCollisionBorderSize();
-                return RotationUtil.rayTrace(entityPlayer.getEntityBoundingBox().expand(
-                        borderSize + this.hitBoxHorizontal.getValue(),
-                        borderSize + this.hitBoxVertical.getValue(),
-                        borderSize + this.hitBoxHorizontal.getValue()
-                ), mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch, this.range.getValue()) != null;
-            }
-        } else {
+    private boolean isValidTarget(EntityLivingBase entity) {
+        if (!Target.get().isValidTarget(entity)) {
             return false;
         }
+        float borderSize = entity.getCollisionBorderSize();
+        return RotationUtil.rayTrace(entity.getEntityBoundingBox().expand(
+                borderSize + this.hitBoxHorizontal.getValue(),
+                borderSize + this.hitBoxVertical.getValue(),
+                borderSize + this.hitBoxHorizontal.getValue()
+        ), mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch, this.range.getValue()) != null;
     }
 
     private boolean hasValidTarget() {
         return mc.theWorld
                 .loadedEntityList
                 .stream()
-                .filter(e -> e instanceof EntityPlayer)
-                .map(e -> (EntityPlayer) e)
+                .filter(entity -> entity instanceof EntityLivingBase)
+                .map(entity -> (EntityLivingBase) entity)
                 .anyMatch(this::isValidTarget);
+    }
+
+    @Override
+    public String getDescription() {
+        return "Clicks for you at a randomised CPS, optionally straight through blocks.";
     }
 
     public AutoClicker() {

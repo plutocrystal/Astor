@@ -21,14 +21,27 @@ public class Wtap extends Module {
     private boolean stopForward = false;
     private long delayTicks = 0L;
     private long durationTicks = 0L;
-    public final FloatProperty delay = new FloatProperty("Delay", 5.5F, 0.0F, 10.0F);
-    public final FloatProperty duration = new FloatProperty("Duration", 1.5F, 1.0F, 5.0F);
+    /**
+     * Milliseconds to hold the sprint before the forward tap starts.
+     *
+     * <p>{@link #delayTicks} is drained 50 per tick, so it counts milliseconds despite the name; the
+     * value is added to it directly and the decrement does the tick conversion.</p>
+     */
+    public final FloatProperty delay = new FloatProperty("Delay", 275.0F, 0.0F, 500.0F, 0);
+
+    /** Milliseconds the tap is held, added to {@link #durationTicks} the same way. */
+    public final FloatProperty duration = new FloatProperty("Duration", 75.0F, 50.0F, 250.0F, 0);
 
     private boolean canTrigger() {
         return !(mc.thePlayer.movementInput.moveForward < 0.8F)
                 && !mc.thePlayer.isCollidedHorizontally
                 && (!((float) mc.thePlayer.getFoodStats().getFoodLevel() <= 6.0F) || mc.thePlayer.capabilities.allowFlying) && (mc.thePlayer.isSprinting()
                 || !mc.thePlayer.isUsingItem() && !mc.thePlayer.isPotionActive(Potion.blindness) && mc.gameSettings.keyBindSprint.isKeyDown());
+    }
+
+    @Override
+    public String getDescription() {
+        return "Releases and re-presses forward around your hits so they register as sprint hits.";
     }
 
     public Wtap() {
@@ -72,8 +85,8 @@ public class Wtap extends Module {
                 this.timer.reset();
                 this.active = true;
                 this.stopForward = false;
-                this.delayTicks = this.delayTicks + (long) (50.0F * this.delay.getValue());
-                this.durationTicks = this.durationTicks + (long) (50.0F * this.duration.getValue());
+                this.delayTicks = this.delayTicks + this.delay.getValue().longValue();
+                this.durationTicks = this.durationTicks + this.duration.getValue().longValue();
             }
         }
     }

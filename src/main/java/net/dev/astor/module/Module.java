@@ -2,6 +2,7 @@ package net.dev.astor.module;
 
 import net.dev.astor.Astor;
 import net.dev.astor.module.impl.render.ClientSetting;
+import net.dev.astor.property.properties.BooleanProperty;
 import net.dev.astor.util.KeyBindUtil;
 
 public abstract class Module {
@@ -9,10 +10,14 @@ public abstract class Module {
     protected final Category category;
     protected final boolean defaultEnabled;
     protected final int defaultKey;
-    protected final boolean defaultHidden;
     protected boolean enabled;
     protected int key;
-    protected boolean hidden;
+    /**
+     * Controls whether this module shows up in the HUD. Declared here so every module gets one, and
+     * created per instance in the constructor - a shared property instance would have one value for
+     * every module and a single owner.
+     */
+    public final BooleanProperty hide;
 
     public Module(String name, Category category, boolean enabled) {
         this(name, category, enabled, false);
@@ -23,7 +28,7 @@ public abstract class Module {
         this.category = category;
         this.enabled = this.defaultEnabled = enabled;
         this.key = this.defaultKey = 0;
-        this.hidden = this.defaultHidden = hidden;
+        this.hide = new BooleanProperty("Hide", hidden);
     }
 
     public String getName() {
@@ -45,6 +50,14 @@ public abstract class Module {
 
     public String[] getSuffix() {
         return new String[0];
+    }
+
+    /**
+     * One line on what this module actually does, shown as a tooltip in the click gui once the cursor
+     * has rested on the module. Empty means no tooltip.
+     */
+    public String getDescription() {
+        return "";
     }
 
     public boolean isEnabled() {
@@ -96,11 +109,11 @@ public abstract class Module {
     }
 
     public boolean isHidden() {
-        return this.hidden;
+        return this.hide.getValue();
     }
 
     public void setHidden(boolean boolean1) {
-        this.hidden = boolean1;
+        this.hide.setValue(boolean1);
     }
 
     public void onEnabled() {

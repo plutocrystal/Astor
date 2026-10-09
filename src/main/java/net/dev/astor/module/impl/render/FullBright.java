@@ -16,6 +16,11 @@ public class FullBright extends Module {
     private boolean appliedNightVision = false;
     public final ModeProperty mode = new ModeProperty("Mode", 0, new String[]{"Gamma", "Effect"});
 
+    @Override
+    public String getDescription() {
+        return "Removes darkness so you can see in the dark.";
+    }
+
     public FullBright() {
         super("Fullbright", Category.RENDER, true, true);
     }
@@ -59,8 +64,10 @@ public class FullBright extends Module {
     }
 
     @Override
-    public void verifyValue(String mode) {
-        if (this.isEnabled()) {
+    public void verifyValue(String propertyName) {
+        // Only a Mode change needs the effect torn down and re-applied. Re-applying on every
+        // property change (Hide included) makes the brightness flicker for a frame.
+        if (this.mode.getName().equals(propertyName) && this.isEnabled()) {
             this.onDisabled();
             this.onEnabled();
         }

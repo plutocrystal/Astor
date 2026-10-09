@@ -30,6 +30,11 @@ public class Speed extends Module {
                 && !((IAccessorEntity) mc.thePlayer).getIsInWeb();
     }
 
+    @Override
+    public String getDescription() {
+        return "Increases your movement speed and can multiply the strafe input.";
+    }
+
     public Speed() {
         super("Speed", Category.MOVEMENT, false);
     }

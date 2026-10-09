@@ -2,7 +2,7 @@ package net.dev.astor.ui.components;
 
 import net.dev.astor.Astor;
 import net.dev.astor.module.Module;
-import net.dev.astor.module.impl.render.GuiModule;
+import net.dev.astor.module.impl.render.ClickGui;
 import net.dev.astor.module.impl.render.HUD;
 import net.dev.astor.ui.Component;
 import net.dev.astor.ui.dataset.BindStage;
@@ -81,7 +81,7 @@ public class BindComponent implements Component {
             return true;
         }
         if (keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_NUMPADENTER) {
-            this.setBind(this.parentModule.mod instanceof GuiModule ? 54 : 0);
+            this.setBind(this.parentModule.mod instanceof ClickGui ? 54 : 0);
         } else {
             this.setBind(keyCode);
         }
@@ -120,8 +120,13 @@ public class BindComponent implements Component {
         return this.isBinding;
     }
 
+    /**
+     * Left half of the row only, so it does not overlap {@link HideComponent} on the right -
+     * {@link ModuleComponent#mouseDown} walks settings back to front and stops at the first hit.
+     */
     public boolean isHovered(int x, int y) {
-        return x > this.x && x < this.x + this.parentModule.category.getWidth() && y > this.y - 1 && y < this.y + 12;
+        int mid = this.x + this.parentModule.category.getWidth() / 2;
+        return x >= this.x && x < mid && y > this.y - 1 && y < this.y + 12;
     }
 
     public int getHeight() {
@@ -134,6 +139,10 @@ public class BindComponent implements Component {
     }
 
     private void renderText(String s, int color) {
-        Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(s, (float) ((this.parentModule.category.getX() + 4) * 2), (float) ((this.parentModule.category.getY() + this.offsetY + 3) * 2), color);
+        // Left aligned with the same 4px padding HideComponent uses on the right, and on the same
+        // +5 baseline every other setting row uses (CheckBoxComponent) so the two sit level.
+        Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(s,
+                (float) (this.parentModule.category.getX() + 4) * 2.0F,
+                (float) ((this.parentModule.category.getY() + this.offsetY + 5) * 2), color);
     }
 }

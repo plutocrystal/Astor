@@ -30,6 +30,11 @@ public class Trajectories extends Module {
     public final BooleanProperty projectiles = new BooleanProperty("Projectiles", false);
     public final BooleanProperty pearls = new BooleanProperty("Pearls", true);
 
+    @Override
+    public String getDescription() {
+        return "Predicts where arrows, pearls and other projectiles will land.";
+    }
+
     public Trajectories() {
         super("Trajectories", Category.RENDER, false, true);
     }

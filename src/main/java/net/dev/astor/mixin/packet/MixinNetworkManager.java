@@ -32,7 +32,10 @@ public abstract class MixinNetworkManager {
     )
     private void channelRead0(ChannelHandlerContext channelHandlerContext, Packet<?> packet, CallbackInfo callbackInfo) {
         if (!packet.getClass().getName().startsWith("net.minecraft.network.play.client")) {
-            if (Astor.delayManager != null && Astor.delayManager.shouldDelay((Packet<INetHandlerPlayClient>) packet)) {
+            // Clientbound packets are always processed by INetHandlerPlayClient, so the cast is safe.
+            @SuppressWarnings("unchecked")
+            Packet<INetHandlerPlayClient> clientPacket = (Packet<INetHandlerPlayClient>) packet;
+            if (Astor.delayManager != null && Astor.delayManager.shouldDelay(clientPacket)) {
                 callbackInfo.cancel();
             } else {
                 PacketEvent event = new PacketEvent(EventType.RECEIVE, packet);
@@ -53,7 +56,10 @@ public abstract class MixinNetworkManager {
     )
     private void safeProcessPacket(Packet<?> packet, INetHandler handler) {
         try {
-            ((Packet<INetHandler>) packet).processPacket(handler);
+            // The handler passed in by NetworkManager always matches the packet's type parameter.
+            @SuppressWarnings("unchecked")
+            Packet<INetHandler> typedPacket = (Packet<INetHandler>) packet;
+            typedPacket.processPacket(handler);
         } catch (ThreadQuickExitException ignored) {
 
         } catch (Exception e) {

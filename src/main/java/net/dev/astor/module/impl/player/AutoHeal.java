@@ -74,6 +74,11 @@ public class AutoHeal extends Module {
         return this.regenCheck.getValue() && mc.thePlayer.isPotionActive(Potion.regeneration);
     }
 
+    @Override
+    public String getDescription() {
+        return "Eats or drinks when your health drops below the threshold you set.";
+    }
+
     public AutoHeal() {
         super("AutoHeal", Category.PLAYER, false);
     }

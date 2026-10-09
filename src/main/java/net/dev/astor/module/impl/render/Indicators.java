@@ -87,6 +87,11 @@ public class Indicators extends Module {
         return new Color(-1);
     }
 
+    @Override
+    public String getDescription() {
+        return "Draws a small marker on projectiles and fireballs showing where they are heading.";
+    }
+
     public Indicators() {
         super("Indicators", Category.RENDER, false, true);
     }

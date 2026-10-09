@@ -8,6 +8,11 @@ public class AntiDebuff extends Module {
     public final BooleanProperty blindness = new BooleanProperty("Blindness", true);
     public final BooleanProperty nausea = new BooleanProperty("Nausea", true);
 
+    @Override
+    public String getDescription() {
+        return "Drops the potion effects you do not want, such as blindness and nausea.";
+    }
+
     public AntiDebuff() {
         super("AntiDebuff", Category.PLAYER, false);
     }

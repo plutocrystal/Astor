@@ -53,9 +53,17 @@ public class InvWalk extends Module {
 
     public final ModeProperty mode = new ModeProperty("Mode", 1, new String[]{"Vanilla", "Legit", "Hypixel", "Legit+"});
     public final BooleanProperty guiEnabled = new BooleanProperty("ClickGui", true);
-    public final IntProperty openDelay = new IntProperty("OpenDelay", 0, 0, 20, () -> mode.getValue() == 3);
-    public final IntProperty closeDelay = new IntProperty("CloseDelay", 4, 0, 20, () -> mode.getValue() == 3);
+    /** Milliseconds to wait before the queued open is sent. See {@link #openDelayTicks}. */
+    public final IntProperty openDelay = new IntProperty("OpenDelay", 0, 0, 1000, () -> mode.getValue() == 3);
+
+    /** Milliseconds to wait before the queued close is sent. See {@link #openDelayTicks}. */
+    public final IntProperty closeDelay = new IntProperty("CloseDelay", 200, 0, 1000, () -> mode.getValue() == 3);
     public final BooleanProperty lockMoveKey = new BooleanProperty("LockMoveDey", false);
+
+    @Override
+    public String getDescription() {
+        return "Keeps you moving while the inventory is open by replaying the queued clicks around it.";
+    }
 
     public InvWalk() {
         super("InvWalk", Category.PLAYER, false);
@@ -268,9 +276,9 @@ public class InvWalk extends Module {
                         this.clickQueue.offer(packet);
                         if (this.closeDelayTicks < 0 && this.openDelayTicks < 0){
                             this.pendingStatus = new C16PacketClientStatus(EnumState.OPEN_INVENTORY_ACHIEVEMENT);
-                            this.openDelayTicks = openDelay.getValue();
+                            this.openDelayTicks = openDelay.getValue() / 50;
                         }
-                        this.closeDelayTicks = closeDelay.getValue();
+                        this.closeDelayTicks = closeDelay.getValue() / 50;
                     }
                     break;
             }

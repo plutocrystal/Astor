@@ -30,6 +30,11 @@ public class ChestESP extends Module {
     public final ColorProperty enderChest = new ColorProperty("EnderChest", new Color(26, 17, 0).getRGB());
     public final BooleanProperty tracers = new BooleanProperty("Tracers", false);
 
+    @Override
+    public String getDescription() {
+        return "Highlights chests in the world by type, with optional tracers.";
+    }
+
     public ChestESP() {
         super("ChestESP", Category.RENDER, false);
     }

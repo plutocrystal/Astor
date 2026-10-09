@@ -8,6 +8,7 @@ import net.dev.astor.event.events.impl.render.Render2DEvent;
 import net.dev.astor.event.events.impl.render.Render3DEvent;
 import net.dev.astor.mixin.client.IAccessorMinecraft;
 import net.dev.astor.module.Module;
+import net.dev.astor.module.impl.misc.Teams;
 import net.dev.astor.util.RenderUtil;
 import net.dev.astor.util.RotationUtil;
 import net.dev.astor.util.TeamUtil;
@@ -33,41 +34,30 @@ public class Tracers extends Module {
     public final PercentProperty opacity = new PercentProperty("Opacity", 100);
     public final IntProperty distance = new IntProperty("Distance", 512, 0, 512);
     public final BooleanProperty showPlayers = new BooleanProperty("Players", true);
-    public final BooleanProperty showFriends = new BooleanProperty("Friends", true);
     public final BooleanProperty showEnemies = new BooleanProperty("Enemies", true);
-    public final BooleanProperty showBots = new BooleanProperty("Bots", false);
 
     private boolean shouldRender(EntityPlayer entityPlayer) {
-        if (entityPlayer.deathTime > 0) {
-            return false;
-        } else if (mc.getRenderViewEntity().getDistanceToEntity(entityPlayer) > (float) this.distance.getValue()) {
+        if (mc.getRenderViewEntity().getDistanceToEntity(entityPlayer) > (float) this.distance.getValue()) {
             return false;
         } else if (entityPlayer != mc.thePlayer && entityPlayer != mc.getRenderViewEntity()) {
-            if (TeamUtil.isBot(entityPlayer)) {
-                return this.showBots.getValue();
-            } else if (TeamUtil.isFriend(entityPlayer)) {
-                return this.showFriends.getValue();
-            } else {
-                return TeamUtil.isTarget(entityPlayer) ? this.showEnemies.getValue() : this.showPlayers.getValue();
-            }
+            // Enemy list membership is what this module draws, not the Target module, so a marked
+            // enemy still gets a tracer while it is on the same team as us.
+            return TeamUtil.isTarget(entityPlayer) ? this.showEnemies.getValue() : this.showPlayers.getValue();
         } else {
             return false;
         }
     }
 
     private Color getEntityColor(EntityPlayer entityPlayer, float alpha) {
-        if (TeamUtil.isFriend(entityPlayer)) {
-            Color color = Astor.friendManager.getColor();
-            return new Color((float) color.getRed() / 255.0F, (float) color.getGreen() / 255.0F, (float) color.getBlue() / 255.0F, alpha);
-        } else if (TeamUtil.isTarget(entityPlayer)) {
-            Color color = Astor.targetManager.getColor();
-            return new Color((float) color.getRed() / 255.0F, (float) color.getGreen() / 255.0F, (float) color.getBlue() / 255.0F, alpha);
+        Color listColor = TeamUtil.getListColor(entityPlayer);
+        if (listColor != null) {
+            return new Color((float) listColor.getRed() / 255.0F, (float) listColor.getGreen() / 255.0F, (float) listColor.getBlue() / 255.0F, alpha);
         } else {
             switch (this.colorMode.getValue()) {
                 case 0:
                     return TeamUtil.getTeamColor(entityPlayer, alpha);
                 case 1:
-                    int teamColor = TeamUtil.isSameTeam(entityPlayer) ? ChatColors.BLUE.toAwtColor() : ChatColors.RED.toAwtColor();
+                    int teamColor = Teams.get().isInYourTeam(entityPlayer) ? ChatColors.BLUE.toAwtColor() : ChatColors.RED.toAwtColor();
                     return new Color(teamColor & Color.WHITE.getRGB() | (int) (alpha * 255.0F) << 24, true);
                 case 2:
                     int color = ((HUD) Astor.moduleManager.modules.get(HUD.class)).getColor(System.currentTimeMillis()).getRGB();
@@ -76,6 +66,11 @@ public class Tracers extends Module {
                     return new Color(1.0F, 1.0F, 1.0F, alpha);
             }
         }
+    }
+
+    @Override
+    public String getDescription() {
+        return "Draws lines from you to entities through walls.";
     }
 
     public Tracers() {

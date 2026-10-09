@@ -28,7 +28,14 @@ public class FastPlace extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
     private static final DecimalFormat df = new DecimalFormat("0.0#", new DecimalFormatSymbols(Locale.US));
     private long delayMS = 0L;
-    public final FloatProperty delay = new FloatProperty("Delay", 1.0F, 1.0F, 3.0F);
+
+    /**
+     * Milliseconds to add on top of the vanilla four-tick cooldown whenever it completes.
+     *
+     * <p>{@link #delayMS} is drained 50 per tick, so it counts milliseconds despite the name; the
+     * value is added to it directly and the decrement does the tick conversion.</p>
+     */
+    public final FloatProperty delay = new FloatProperty("Delay", 50.0F, 50.0F, 150.0F, 0);
     public final BooleanProperty blocksOnly = new BooleanProperty("BlocksOnly", true);
     public final BooleanProperty placeFix = new BooleanProperty("PlaceFix", true);
     public final BooleanProperty skipObsidian = new BooleanProperty("SkipObsidian", true);
@@ -63,6 +70,11 @@ public class FastPlace extends Module {
         return !(Boolean) this.blocksOnly.getValue();
     }
 
+    @Override
+    public String getDescription() {
+        return "Skips part of the cooldown between placing blocks, so you can place faster.";
+    }
+
     public FastPlace() {
         super("FastPlace", Category.PLAYER, false);
     }
@@ -72,7 +84,7 @@ public class FastPlace extends Module {
         if (this.isEnabled() && event.getType() == EventType.PRE) {
             int rightClickDelayTimer = ((IAccessorMinecraft) mc).getRightClickDelayTimer();
             if (rightClickDelayTimer == 4) {
-                this.delayMS = this.delayMS + (long) (50.0F * this.delay.getValue());
+                this.delayMS = this.delayMS + this.delay.getValue().longValue();
             }
             if (this.delayMS > 0L) {
                 this.delayMS = this.delayMS - 50;

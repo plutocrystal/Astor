@@ -36,8 +36,14 @@ public class TeamUtil {
         }).collect(Collectors.toList());
     }
 
+    /**
+     * Health weighted by armour, used to sort the squishiest target first. An entity with no armour
+     * scores 20 points per point of health, so the armour division has to fall back to one rather
+     * than divide by zero.
+     */
     public static float getHealthScore(EntityLivingBase entityLivingBase) {
-        return entityLivingBase.getHealth() * (20.0f / (float) entityLivingBase.getTotalArmorValue());
+        int armor = entityLivingBase.getTotalArmorValue();
+        return entityLivingBase.getHealth() * (armor > 0 ? 20.0f / (float) armor : 20.0f);
     }
 
     public static String stripName(Entity entity) {
@@ -56,27 +62,12 @@ public class TeamUtil {
         return new Color(colorCode & 0xFFFFFF | (int)(alpha * 255) << 24, true);
     }
 
-    public static boolean isBot(EntityPlayer player) {
-        if (player == TeamUtil.mc.thePlayer) {
-            return false;
-        }
-        NetworkPlayerInfo playerInfo = mc.getNetHandler().getPlayerInfo(player.getName());
-        if (playerInfo == null) {
-            return true;
-        }
-        if (!ServerUtil.isHypixel()) return false;
-        if (player.getName().startsWith("§k")) {
-            return player.isInvisible();
-        }
-        if (playerInfo.getResponseTime() < 1) {
-            return true;
-        }
-        ScorePlayerTeam playerTeam = playerInfo.getPlayerTeam();
-        if (playerTeam == null) return false;
-        if (!playerTeam.getTeamName().isEmpty()) return false;
-        return playerTeam.getColorPrefix().equals("§c");
-    }
-
+    /**
+     * @deprecated team detection now lives in the Teams module, which also covers the name colour,
+     * leather dye and GommeSW prefix hints. Use
+     * {@link net.dev.astor.module.impl.misc.Teams#get().isInYourTeam(EntityLivingBase)} instead.
+     */
+    @Deprecated
     public static boolean isSameTeam(EntityPlayer player) {
         if (player == TeamUtil.mc.thePlayer) {
             return true;
@@ -100,28 +91,6 @@ public class TeamUtil {
         return selfTeam.getColorPrefix().equals(targetTeam.getColorPrefix());
     }
 
-    public static boolean hasTeamColor(EntityLivingBase entity) {
-        if (entity == TeamUtil.mc.thePlayer) {
-            return true;
-        }
-        NetworkPlayerInfo selfInfo = mc.getNetHandler().getPlayerInfo(TeamUtil.mc.thePlayer.getUniqueID());
-        if (selfInfo == null) {
-            return false;
-        }
-        ScorePlayerTeam selfTeam = selfInfo.getPlayerTeam();
-        if (selfTeam == null) {
-            return false;
-        }
-        if (selfTeam.getColorPrefix().length() < 2) {
-            return false;
-        }
-        EntityLivingBase nearestArmorStand = TeamUtil.mc.theWorld.findNearestEntityWithinAABB(EntityArmorStand.class, entity.getEntityBoundingBox(), entity);
-        if (nearestArmorStand != null) {
-            return nearestArmorStand.getName().contains(selfTeam.getColorPrefix().substring(0, 2));
-        }
-        return false;
-    }
-
     public static boolean isShop(EntityLivingBase entity) {
         if (entity == TeamUtil.mc.thePlayer) {
             return false;
@@ -142,5 +111,23 @@ public class TeamUtil {
 
     public static boolean isTarget(EntityPlayer player) {
         return Astor.targetManager.isFriend(player.getName());
+    }
+
+    /**
+     * Colour the friend and enemy lists paint a player with, or null when the entity is on neither
+     * list. Shared so every renderer paints the same player the same way instead of each one
+     * re-deriving the friend-then-target precedence.
+     */
+    public static Color getListColor(Entity entity) {
+        if (!(entity instanceof EntityPlayer)) {
+            return null;
+        }
+        if (isFriend((EntityPlayer) entity)) {
+            return Astor.friendManager.getColor();
+        }
+        if (isTarget((EntityPlayer) entity)) {
+            return Astor.targetManager.getColor();
+        }
+        return null;
     }
 }

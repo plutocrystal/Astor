@@ -4,14 +4,15 @@ import net.dev.astor.module.Category;
 import net.dev.astor.Astor;
 import net.dev.astor.event.EventTarget;
 import net.dev.astor.event.types.EventType;
+import net.dev.astor.event.events.impl.player.SwapItemEvent;
 import net.dev.astor.event.events.impl.player.TickEvent;
 import net.dev.astor.module.Module;
-import net.dev.astor.module.impl.combat.KillAura;
+import net.dev.astor.module.impl.combat.killaura.KillAura;
+import net.dev.astor.module.impl.misc.Target;
 import net.dev.astor.util.ItemUtil;
 import net.dev.astor.util.KeyBindUtil;
 import net.dev.astor.property.properties.BooleanProperty;
 import net.dev.astor.property.properties.IntProperty;
-import net.dev.astor.util.TeamUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 
@@ -19,24 +20,52 @@ public class AutoTool extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
     private int currentToolSlot = -1;
     private int previousSlot = -1;
+    // Render-only slot: the hotbar key the player pressed. The real slot is switched to the tool so the
+    // server counts the right tool for speed/drops, while this drives what our own screen shows.
+    private int spoofSlot = -1;
     private int tickDelayCounter = 0;
-    public final IntProperty switchDelay = new IntProperty("Delay", 0, 0, 5);
+
+    /**
+     * Milliseconds to wait before switching the held tool.
+     *
+     * <p>{@link #tickDelayCounter} counts ticks, so the value is divided by 50 where it is compared.
+     * Anything under 50ms floors to zero, meaning no wait at all.</p>
+     */
+    public final IntProperty switchDelay = new IntProperty("Delay", 0, 0, 250);
     public final BooleanProperty switchBack = new BooleanProperty("SwitchBack", true);
     public final BooleanProperty sneakOnly = new BooleanProperty("SneakOnly", true);
-    public final BooleanProperty itemSpoof = new BooleanProperty("ItemSpoof", false);
+    public final BooleanProperty itemSpoof = new BooleanProperty("ItemSpoof", false, () -> (Boolean) this.switchBack.getValue());
+
+    @Override
+    public String getDescription() {
+        return "Switches to the right tool for the block you are mining, and can switch back afterwards.";
+    }
 
     public AutoTool() {
         super("AutoTool", Category.PLAYER, false);
     }
 
+    /**
+     * Render-only slot backing ItemSpoof. Deliberately not the real tool slot: {@link #currentToolSlot}
+     * is what the server sees and must stay real so mining speed and drops are correct.
+     */
     public int getSlot() {
-        return this.currentToolSlot;
+        return this.spoofSlot;
+    }
+
+    @EventTarget
+    public void onSwap(SwapItemEvent event) {
+        if (this.isEnabled()) {
+            this.spoofSlot = event.setSlot(this.spoofSlot);
+        }
     }
 
     public boolean isKillAura() {
         KillAura killAura = (KillAura) Astor.moduleManager.modules.get(KillAura.class);
         if (!killAura.isEnabled()) return false;
-        return TeamUtil.isEntityLoaded(killAura.getTarget()) && killAura.isAttackAllowed();
+        // Re-check the target rather than trust KillAura, so the block-breaking switch never stays
+        // suppressed by a friend or teammate.
+        return Target.get().isValidTarget(killAura.getTarget()) && killAura.isAttackAllowed();
     }
 
     @EventTarget
@@ -51,7 +80,7 @@ public class AutoTool extends Module {
                     && mc.gameSettings.keyBindAttack.isKeyDown()
                     && !mc.thePlayer.isUsingItem()
                     && !isKillAura()) {
-                if (this.tickDelayCounter >= this.switchDelay.getValue()
+                if (this.tickDelayCounter >= this.switchDelay.getValue() / 50
                         && (!(Boolean) this.sneakOnly.getValue() || KeyBindUtil.isKeyDown(mc.gameSettings.keyBindSneak.getKeyCode()))) {
                     int slot = ItemUtil.findInventorySlot(
                             mc.thePlayer.inventory.currentItem, mc.theWorld.getBlockState(mc.objectMouseOver.getBlockPos()).getBlock()
@@ -76,9 +105,17 @@ public class AutoTool extends Module {
     }
 
     @Override
+    public void onEnabled() {
+        // Seed with the slot already held so an untouched AutoTool renders identically to vanilla
+        // until the player actually presses a hotbar key.
+        this.spoofSlot = mc.thePlayer != null ? mc.thePlayer.inventory.currentItem : -1;
+    }
+
+    @Override
     public void onDisabled() {
         this.currentToolSlot = -1;
         this.previousSlot = -1;
+        this.spoofSlot = -1;
         this.tickDelayCounter = 0;
     }
 }

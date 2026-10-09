@@ -35,6 +35,11 @@ public class NoSlow extends Module {
     public final PercentProperty bowMotion = new PercentProperty("BowMotion", 100, () -> this.bowMode.getValue() != 0);
     public final BooleanProperty bowSprint = new BooleanProperty("BowSprint", true, () -> this.bowMode.getValue() != 0);
 
+    @Override
+    public String getDescription() {
+        return "Removes the slowdown from using a sword, eating or drinking, and drawing a bow.";
+    }
+
     public NoSlow() {
         super("NoSlow", Category.MOVEMENT, false);
     }

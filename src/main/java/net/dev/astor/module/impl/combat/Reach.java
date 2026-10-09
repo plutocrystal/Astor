@@ -22,6 +22,11 @@ public class Reach extends Module {
     public final FloatProperty range = new FloatProperty("Range", 3.1F, 3.0F, 6.0F);
     public final PercentProperty chance = new PercentProperty("Chance", 100);
 
+    @Override
+    public String getDescription() {
+        return "Extends how far you can pick and hit entities.";
+    }
+
     public Reach() {
         super("Reach", Category.COMBAT, false);
     }

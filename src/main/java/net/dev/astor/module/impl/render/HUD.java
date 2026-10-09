@@ -90,6 +90,11 @@ public class HUD extends Module {
         return 1.0F - (float) (Math.abs(long3 - long4 * 300L) % speed) / (float) speed;
     }
 
+    @Override
+    public String getDescription() {
+        return "Draws the module list and its settings on screen.";
+    }
+
     public HUD() {
         super("HUD", Category.RENDER, true, true);
     }

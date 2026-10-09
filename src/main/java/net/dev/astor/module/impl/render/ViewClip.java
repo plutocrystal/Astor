@@ -7,6 +7,11 @@ import net.minecraft.client.Minecraft;
 public class ViewClip extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
 
+    @Override
+    public String getDescription() {
+        return "Raises the distance at which the world starts rendering, so distant chunks are not loaded.";
+    }
+
     public ViewClip() {
         super("ViewClip", Category.RENDER, false);
     }

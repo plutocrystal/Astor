@@ -20,6 +20,7 @@ import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Vec3;
 import org.lwjgl.opengl.Display;
@@ -518,6 +519,14 @@ public class RenderUtil {
 
     public static float lerpFloat(float current, float previous, float t) {
         return previous + (current - previous) * t;
+    }
+
+    /**
+     * Same as {@link #lerpFloat} but takes the short way round the seam. Yaw wraps at +/-180, so a plain
+     * lerp between 179 and -179 would sweep 358 degrees the wrong way.
+     */
+    public static float lerpAngle(float current, float previous, float t) {
+        return previous + MathHelper.wrapAngleTo180_float(current - previous) * t;
     }
 
     public static double lerpDouble(double current, double previous, double t) {

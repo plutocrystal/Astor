@@ -15,6 +15,11 @@ public class Jesus extends Module {
     public final BooleanProperty noPush = new BooleanProperty("NoPush", true);
     public final BooleanProperty groundOnly = new BooleanProperty("GroundOnly", true);
 
+    @Override
+    public String getDescription() {
+        return "Lets you walk on water and lava as if it were solid ground.";
+    }
+
     public Jesus() {
         super("Jesus", Category.MOVEMENT, false);
     }

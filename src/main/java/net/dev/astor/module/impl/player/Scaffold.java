@@ -40,28 +40,21 @@ import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Comparator;
 
 public class Scaffold extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
-    private static final double[] placeOffsets = new double[]{
-            0.03125,
-            0.09375,
-            0.15625,
-            0.21875,
-            0.28125,
-            0.34375,
-            0.40625,
-            0.46875,
-            0.53125,
-            0.59375,
-            0.65625,
-            0.71875,
-            0.78125,
-            0.84375,
-            0.90625,
-            0.96875
-    };
+    private static final double[] placeOffsets = new double[16];
+    private static final long TELLY_OVERRIDE_MS = 150L;
+    private static final int RESCUE_SCAN_DOWN = 8;
+    private static final double RESCUE_TRIGGER_MOTION_Y = -0.42;
+    private static final int RESCUE_PREDICT_TICKS = 8;
+
+    static {
+        for (int i = 0; i < placeOffsets.length; i++) {
+            placeOffsets[i] = 0.03125 + RandomUtil.nextDouble() * (0.96875 - 0.03125);
+        }
+    }
+
     private int rotationTick = 0;
     private int lastSlot = -1;
     private int blockCount = -1;
@@ -74,7 +67,10 @@ public class Scaffold extends Module {
     private int startY = 256;
     private boolean shouldKeepY = false;
     private boolean towering = false;
+    private boolean lastIsTowering = false;
+    private long tellyOverrideStart = 0L;
     private EnumFacing targetFacing = null;
+
     public final ModeProperty rotationMode = new ModeProperty("Rotations", 2, new String[]{"None", "Default", "Backwards", "Sideways"});
     public final ModeProperty moveFix = new ModeProperty("MoveFix", 1, new String[]{"None", "Silent"});
     public final ModeProperty sprintMode = new ModeProperty("Sprint", 0, new String[]{"None", "Vanilla"});
@@ -165,16 +161,172 @@ public class Scaffold extends Module {
             if (positions.isEmpty()) {
                 return null;
             } else {
-                positions.sort(
-                        Comparator.comparingDouble(
-                                o -> o.distanceSqToCenter((double) targetPos.getX() + 0.5, (double) targetPos.getY() + 0.5, (double) targetPos.getZ() + 0.5)
-                        )
-                );
+                final double cx = (double) targetPos.getX() + 0.5;
+                final double cy = (double) targetPos.getY() + 0.5;
+                final double cz = (double) targetPos.getZ() + 0.5;
+                positions.sort((o1, o2) -> Double.compare(o1.distanceSqToCenter(cx, cy, cz), o2.distanceSqToCenter(cx, cy, cz)));
                 BlockPos blockPos = positions.get(0);
                 EnumFacing facing = this.getBestFacing(blockPos, targetPos);
                 return facing == null ? null : new BlockData(blockPos, facing);
             }
         }
+    }
+
+    private ArrayList<BlockPos> getPredictedLandings() {
+        ArrayList<BlockPos> landings = new ArrayList<>();
+        if (mc.thePlayer == null) {
+            return landings;
+        }
+
+        double px = mc.thePlayer.posX;
+        double py = mc.thePlayer.posY;
+        double pz = mc.thePlayer.posZ;
+        double mx = mc.thePlayer.motionX;
+        double my = mc.thePlayer.motionY;
+        double mz = mc.thePlayer.motionZ;
+
+        for (int i = 0; i < RESCUE_PREDICT_TICKS; i++) {
+            py += my;
+            my = (my - 0.08) * 0.98;
+            px += mx;
+            pz += mz;
+            mx *= 0.91;
+            mz *= 0.91;
+
+            BlockPos landing = new BlockPos(
+                    MathHelper.floor_double(px),
+                    MathHelper.floor_double(py) - 1,
+                    MathHelper.floor_double(pz)
+            );
+            if (!landings.contains(landing)) {
+                landings.add(landing);
+            }
+        }
+
+        return landings;
+    }
+
+    private ArrayList<BlockPos> getRescueLandings() {
+        ArrayList<BlockPos> landings = this.getPredictedLandings();
+        BlockPos current = new BlockPos(
+                MathHelper.floor_double(mc.thePlayer.posX),
+                MathHelper.floor_double(mc.thePlayer.posY) - 1,
+                MathHelper.floor_double(mc.thePlayer.posZ)
+        );
+        if (!landings.contains(current)) {
+            landings.add(0, current);
+        }
+        return landings;
+    }
+
+    private boolean shouldSelfRescue() {
+        if (mc.thePlayer == null || mc.thePlayer.onGround) {
+            return false;
+        }
+
+        double my = mc.thePlayer.motionY;
+        boolean willFall = false;
+        for (int i = 0; i <= RESCUE_PREDICT_TICKS; i++) {
+            if (my < RESCUE_TRIGGER_MOTION_Y) {
+                willFall = true;
+                break;
+            }
+            my = (my - 0.08) * 0.98;
+        }
+        if (!willFall) {
+            return false;
+        }
+
+        ArrayList<BlockPos> landings = this.getRescueLandings();
+        for (BlockPos landing : landings) {
+            boolean allAir = true;
+            for (int y = landing.getY(); y >= landing.getY() - RESCUE_SCAN_DOWN; y--) {
+                if (!BlockUtil.isReplaceable(new BlockPos(landing.getX(), y, landing.getZ()))) {
+                    allAir = false;
+                    break;
+                }
+            }
+            if (!allAir) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private BlockData findSelfRescueBlock() {
+        ArrayList<BlockPos> landings = this.getRescueLandings();
+        if (landings.isEmpty()) {
+            return null;
+        }
+
+        ArrayList<BlockPos> airLandings = new ArrayList<>();
+        for (BlockPos landing : landings) {
+            if (BlockUtil.isReplaceable(landing)) {
+                airLandings.add(landing);
+            }
+        }
+        if (airLandings.isEmpty()) {
+            return null;
+        }
+
+        double reach = (double) mc.playerController.getBlockReachDistance();
+        int radius = (int) Math.ceil(reach) + 1;
+        ArrayList<BlockData> supports = new ArrayList<>();
+
+        for (BlockPos landing : airLandings) {
+            for (int x = -radius; x <= radius; x++) {
+                for (int y = -radius; y <= radius; y++) {
+                    for (int z = -radius; z <= radius; z++) {
+                        BlockPos pos = landing.add(x, y, z);
+                        if (BlockUtil.isReplaceable(pos) || BlockUtil.isInteractable(pos)) {
+                            continue;
+                        }
+                        if (mc.thePlayer.getDistance(
+                                (double) pos.getX() + 0.5,
+                                (double) pos.getY() + 0.5,
+                                (double) pos.getZ() + 0.5) > reach) {
+                            continue;
+                        }
+                        for (EnumFacing facing : EnumFacing.VALUES) {
+                            if (facing == EnumFacing.DOWN) {
+                                continue;
+                            }
+                            BlockPos neighbor = pos.offset(facing);
+                            if (!airLandings.contains(neighbor)) {
+                                continue;
+                            }
+                            BlockData data = new BlockData(pos, facing);
+                            boolean exists = false;
+                            for (BlockData d : supports) {
+                                if (d.blockPos().equals(pos) && d.facing() == facing) {
+                                    exists = true;
+                                    break;
+                                }
+                            }
+                            if (!exists) {
+                                supports.add(data);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (supports.isEmpty()) {
+            return null;
+        }
+
+        final BlockPos target = airLandings.get(airLandings.size() - 1);
+        final double cx = (double) target.getX() + 0.5;
+        final double cy = (double) target.getY() + 0.5;
+        final double cz = (double) target.getZ() + 0.5;
+        supports.sort((o1, o2) -> Double.compare(
+                o1.blockPos().distanceSqToCenter(cx, cy, cz),
+                o2.blockPos().distanceSqToCenter(cx, cy, cz)
+        ));
+        return supports.get(0);
     }
 
     private void place(BlockPos blockPos, EnumFacing enumFacing, Vec3 vec3) {
@@ -241,6 +393,10 @@ public class Scaffold extends Module {
         return absYaw > 20.0F && absYaw < 70.0F;
     }
 
+    private boolean isDiagonalInput() {
+        return MoveUtil.getForwardValue() != 0 && MoveUtil.getLeftValue() != 0;
+    }
+
     private boolean isTowering() {
         if (mc.thePlayer.onGround && MoveUtil.isForwardPressed() && !PlayerUtil.isAirAbove()) {
             boolean keepY = this.keepY.getValue() == 3;
@@ -249,6 +405,11 @@ public class Scaffold extends Module {
         } else {
             return false;
         }
+    }
+
+    @Override
+    public String getDescription() {
+        return "Places blocks under itself while walking, so you never run out of tower blocks.";
     }
 
     public Scaffold() {
@@ -335,6 +496,14 @@ public class Scaffold extends Module {
                     }
                 }
                 BlockData blockData = this.getBlockData();
+                boolean rescueActive = false;
+                if (this.shouldSelfRescue()) {
+                    BlockData rescue = this.findSelfRescueBlock();
+                    if (rescue != null) {
+                        blockData = rescue;
+                        rescueActive = true;
+                    }
+                }
                 Vec3 hitVec = null;
                 if (blockData != null) {
                     double[] x = placeOffsets;
@@ -392,7 +561,7 @@ public class Scaffold extends Module {
                         this.canRotate = true;
                     }
                 }
-                if (this.canRotate && MoveUtil.isForwardPressed() && Math.abs(MathHelper.wrapAngleTo180_float(yawDiffTo180 - this.yaw)) < 90.0F) {
+                if (this.canRotate && !rescueActive && MoveUtil.isForwardPressed() && Math.abs(MathHelper.wrapAngleTo180_float(yawDiffTo180 - this.yaw)) < 90.0F) {
                     switch (this.rotationMode.getValue()) {
                         case 2:
                             this.yaw = RotationUtil.quantizeAngle(yawDiffTo180);
@@ -401,23 +570,31 @@ public class Scaffold extends Module {
                             this.yaw = RotationUtil.quantizeAngle(diagonalYaw);
                     }
                 }
+                boolean isToweringNow = this.isTowering();
                 if (this.rotationMode.getValue() != 0) {
                     float targetYaw = this.yaw;
                     float targetPitch = this.pitch;
-                    if (this.towering && (mc.thePlayer.motionY > 0.0 || mc.thePlayer.posY > (double) (this.startY + 1))) {
+                    if (this.towering && !rescueActive && (mc.thePlayer.motionY > 0.0 || mc.thePlayer.posY > (double) (this.startY + 1))) {
                         float yawDiff = MathHelper.wrapAngleTo180_float(this.yaw - event.getYaw());
                         float tolerance = this.rotationTick >= 2 ? RandomUtil.nextFloat(90.0F, 95.0F) : RandomUtil.nextFloat(30.0F, 35.0F);
                         if (Math.abs(yawDiff) > tolerance) {
                             float clampedYaw = RotationUtil.clampAngle(yawDiff, tolerance);
-                            targetYaw = RotationUtil.quantizeAngle(event.getYaw() + clampedYaw);
-                            this.rotationTick = Math.max(this.rotationTick, 1);
+                            this.yaw = RotationUtil.quantizeAngle(event.getYaw() + clampedYaw);
+                            targetYaw = this.yaw;
                         }
                     }
-                    if (this.isTowering()) {
-                        float yawDelta = MathHelper.wrapAngleTo180_float(mc.thePlayer.rotationYaw - event.getYaw());
-                        targetYaw = RotationUtil.quantizeAngle(event.getYaw() + yawDelta * RandomUtil.nextFloat(0.98F, 0.99F));
-                        targetPitch = RotationUtil.quantizeAngle(RandomUtil.nextFloat(30.0F, 80.0F));
-                        this.rotationTick = 3;
+                    if (isToweringNow && !rescueActive) {
+                        if (!this.lastIsTowering) {
+                            this.tellyOverrideStart = System.currentTimeMillis();
+                        }
+                        if (System.currentTimeMillis() - this.tellyOverrideStart < TELLY_OVERRIDE_MS) {
+                            float yawDelta = MathHelper.wrapAngleTo180_float(mc.thePlayer.rotationYaw - event.getYaw());
+                            this.yaw = RotationUtil.quantizeAngle(event.getYaw() + yawDelta * RandomUtil.nextFloat(0.98F, 0.99F));
+                            this.pitch = RotationUtil.quantizeAngle(RandomUtil.nextFloat(30.0F, 80.0F));
+                            targetYaw = this.yaw;
+                            targetPitch = this.pitch;
+                            this.rotationTick = 3;
+                        }
                         this.towering = true;
                     }
                     event.setRotation(targetYaw, targetPitch, 3);
@@ -425,9 +602,10 @@ public class Scaffold extends Module {
                         event.setPervRotation(targetYaw, 3);
                     }
                 }
+                this.lastIsTowering = isToweringNow;
                 if (blockData != null && hitVec != null && this.rotationTick <= 0) {
                     this.place(blockData.blockPos(), blockData.facing(), hitVec);
-                    if (this.multiplace.getValue()) {
+                    if (this.multiplace.getValue() && !rescueActive) {
                         for (int i = 0; i < 3; i++) {
                             blockData = this.getBlockData();
                             if (blockData == null) {
@@ -751,6 +929,8 @@ public class Scaffold extends Module {
         this.towerTick = 0;
         this.towerDelay = 0;
         this.towering = false;
+        this.lastIsTowering = false;
+        this.tellyOverrideStart = 0L;
     }
 
     @Override

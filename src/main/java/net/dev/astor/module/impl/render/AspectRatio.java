@@ -12,6 +12,11 @@ public class AspectRatio extends Module {
     private static final DecimalFormat df = new DecimalFormat("0.00", new DecimalFormatSymbols(Locale.US));
     public final FloatProperty ratio = new FloatProperty("Ratio", 1.78F, 0.0F, 5.0F);
 
+    @Override
+    public String getDescription() {
+        return "Stretches the screen to a different aspect ratio than your display.";
+    }
+
     public AspectRatio() {
         super("AspectRatio", Category.RENDER, false);
     }

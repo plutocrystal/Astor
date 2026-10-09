@@ -11,6 +11,7 @@ import net.dev.astor.event.events.impl.render.ResizeEvent;
 import net.dev.astor.mixin.render.IAccessorEntityRenderer;
 import net.dev.astor.mixin.render.IAccessorRenderManager;
 import net.dev.astor.module.Module;
+import net.dev.astor.module.impl.misc.Teams;
 import net.dev.astor.util.ColorUtil;
 import net.dev.astor.util.RenderUtil;
 import net.dev.astor.util.TeamUtil;
@@ -40,42 +41,33 @@ public class ESP extends Module {
     public final ModeProperty color = new ModeProperty("Color", 0, new String[]{"Default", "Teams", "Hud"});
     public final ModeProperty healthBar = new ModeProperty("HealthBar", 0, new String[]{"None", "2D", "Raven"});
     public final BooleanProperty players = new BooleanProperty("Players", true);
-    public final BooleanProperty friends = new BooleanProperty("Friends", true);
     public final BooleanProperty enemies = new BooleanProperty("Enemies", true);
     public final BooleanProperty self = new BooleanProperty("Self", false);
-    public final BooleanProperty bots = new BooleanProperty("Bots", false);
 
     private boolean shouldRenderPlayer(EntityPlayer entityPlayer) {
-        if (entityPlayer.deathTime > 0) {
-            return false;
-        } else if (mc.getRenderViewEntity().getDistanceToEntity(entityPlayer) > 512.0F) {
+        if (mc.getRenderViewEntity().getDistanceToEntity(entityPlayer) > 512.0F) {
             return false;
         } else if (!entityPlayer.ignoreFrustumCheck && !RenderUtil.isInViewFrustum(entityPlayer.getEntityBoundingBox(), 0.1F)) {
             return false;
         } else if (entityPlayer != mc.thePlayer && entityPlayer != mc.getRenderViewEntity()) {
-            if (TeamUtil.isBot(entityPlayer)) {
-                return this.bots.getValue();
-            } else if (TeamUtil.isFriend(entityPlayer)) {
-                return this.friends.getValue();
-            } else {
-                return TeamUtil.isTarget(entityPlayer) ? this.enemies.getValue() : this.players.getValue();
-            }
+            // Enemy list membership is what this module draws, not the Target module, so a marked
+            // enemy still gets an ESP box while it is on the same team as us.
+            return TeamUtil.isTarget(entityPlayer) ? this.enemies.getValue() : this.players.getValue();
         } else {
             return this.self.getValue() && mc.gameSettings.thirdPersonView != 0;
         }
     }
 
     private Color getEntityColor(EntityPlayer entityPlayer) {
-        if (TeamUtil.isFriend(entityPlayer)) {
-            return Astor.friendManager.getColor();
-        } else if (TeamUtil.isTarget(entityPlayer)) {
-            return Astor.targetManager.getColor();
+        Color listColor = TeamUtil.getListColor(entityPlayer);
+        if (listColor != null) {
+            return listColor;
         } else {
             switch (this.color.getValue()) {
                 case 0:
                     return TeamUtil.getTeamColor(entityPlayer, 1.0F);
                 case 1:
-                    int teamColor = TeamUtil.isSameTeam(entityPlayer) ? ChatColors.BLUE.toAwtColor() : ChatColors.RED.toAwtColor();
+                    int teamColor = Teams.get().isInYourTeam(entityPlayer) ? ChatColors.BLUE.toAwtColor() : ChatColors.RED.toAwtColor();
                     return new Color(teamColor);
                 case 2:
                     int hudColor = ((HUD) Astor.moduleManager.modules.get(HUD.class)).getColor(System.currentTimeMillis()).getRGB();
@@ -84,6 +76,11 @@ public class ESP extends Module {
                     return new Color(-1);
             }
         }
+    }
+
+    @Override
+    public String getDescription() {
+        return "Draws boxes or outlines around entities through walls.";
     }
 
     public ESP() {

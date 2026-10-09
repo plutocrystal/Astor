@@ -17,6 +17,11 @@ public class Fly extends Module {
     public final FloatProperty hSpeed = new FloatProperty("HorizontalSpeed", 1.0F, 0.0F, 100.0F);
     public final FloatProperty vSpeed = new FloatProperty("VerticalSpeed", 1.0F, 0.0F, 100.0F);
 
+    @Override
+    public String getDescription() {
+        return "Lets you fly, with separate horizontal and vertical speed.";
+    }
+
     public Fly() {
         super("Fly", Category.MOVEMENT, false);
     }

@@ -9,15 +9,14 @@ import net.dev.astor.event.events.impl.render.Render3DEvent;
 import net.dev.astor.event.events.impl.movement.StrafeEvent;
 import net.dev.astor.event.events.impl.player.UpdateEvent;
 import net.dev.astor.module.Module;
-import net.dev.astor.module.impl.combat.KillAura;
+import net.dev.astor.module.impl.combat.killaura.KillAura;
+import net.dev.astor.module.impl.misc.Target;
 import net.dev.astor.module.impl.movement.Fly;
 import net.dev.astor.module.impl.movement.LongJump;
 import net.dev.astor.module.impl.movement.Speed;
-import net.dev.astor.module.impl.render.HUD;
 import net.dev.astor.util.*;
 import net.dev.astor.property.properties.*;
 import net.dev.astor.property.properties.BooleanProperty;
-import net.dev.astor.property.properties.ModeProperty;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -35,7 +34,6 @@ public class TargetStrafe extends Module {
     public final IntProperty points = new IntProperty("Points", 6, 3, 24);
     public final BooleanProperty requirePress = new BooleanProperty("RequirePress", true);
     public final BooleanProperty speedOnly = new BooleanProperty("SpeedOnly", true);
-    public final ModeProperty showTarget = new ModeProperty("ShowTarget", 1, new String[]{"None", "Default", "Hud"});
 
     private boolean canStrafe() {
         if (this.speedOnly.getValue()) {
@@ -53,33 +51,22 @@ public class TargetStrafe extends Module {
         KillAura killAura = (KillAura) Astor.moduleManager.modules.get(KillAura.class);
         if (killAura.isEnabled() && killAura.isAttackAllowed()) {
             EntityLivingBase entityLivingBase = killAura.getTarget();
-            return !TeamUtil.isEntityLoaded(entityLivingBase) ? null : entityLivingBase;
+            // Re-check rather than trust KillAura, so the strafe never circles a friend or teammate.
+            return !Target.get().isValidTarget(entityLivingBase) ? null : entityLivingBase;
         } else {
             return null;
         }
     }
 
     private Color getTargetColor(EntityLivingBase entityLivingBase) {
-        if (entityLivingBase instanceof EntityPlayer) {
-            if (TeamUtil.isFriend((EntityPlayer) entityLivingBase)) {
-                return Astor.friendManager.getColor();
-            }
-            if (TeamUtil.isTarget((EntityPlayer) entityLivingBase)) {
-                return Astor.targetManager.getColor();
-            }
+        Color listColor = TeamUtil.getListColor(entityLivingBase);
+        if (listColor != null) {
+            return listColor;
         }
-        switch (this.showTarget.getValue()) {
-            case 1:
-                if (!(entityLivingBase instanceof EntityPlayer)) {
-                    return Color.WHITE;
-                }
-                return TeamUtil.getTeamColor((EntityPlayer) entityLivingBase, 1.0F);
-            case 2:
-                int color = ((HUD) Astor.moduleManager.modules.get(HUD.class)).getColor(System.currentTimeMillis()).getRGB();
-                return new Color(color);
-            default:
-                return new Color(-1);
+        if (!(entityLivingBase instanceof EntityPlayer)) {
+            return Color.WHITE;
         }
+        return TeamUtil.getTeamColor((EntityPlayer) entityLivingBase, 1.0F);
     }
 
     private boolean isInWater(double x, double z) {
@@ -94,6 +81,11 @@ public class TargetStrafe extends Module {
         } else {
             return index >= size ? 0 : index;
         }
+    }
+
+    @Override
+    public String getDescription() {
+        return "Circles your target while strafing around them instead of standing still.";
     }
 
     public TargetStrafe() {
@@ -187,15 +179,13 @@ public class TargetStrafe extends Module {
     @EventTarget
     public void onRender(Render3DEvent event) {
         if (this.isEnabled() && TeamUtil.isEntityLoaded(this.target)) {
-            if (this.showTarget.getValue() != 0) {
-                Color color = this.getTargetColor(this.target);
-                RenderUtil.enableRenderState();
-                RenderUtil.drawEntityCircle(
-                        this.target, this.radius.getValue(), this.points.getValue(), ColorUtil.darker(color, 0.2F).getRGB()
-                );
-                RenderUtil.drawEntityCircle(this.target, this.radius.getValue(), this.points.getValue(), color.getRGB());
-                RenderUtil.disableRenderState();
-            }
+            Color color = this.getTargetColor(this.target);
+            RenderUtil.enableRenderState();
+            RenderUtil.drawEntityCircle(
+                    this.target, this.radius.getValue(), this.points.getValue(), ColorUtil.darker(color, 0.2F).getRGB()
+            );
+            RenderUtil.drawEntityCircle(this.target, this.radius.getValue(), this.points.getValue(), color.getRGB());
+            RenderUtil.disableRenderState();
         }
     }
 

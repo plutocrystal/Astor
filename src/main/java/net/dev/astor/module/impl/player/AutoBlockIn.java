@@ -59,6 +59,11 @@ public class AutoBlockIn extends Module {
     private static final double STEP = 0.2;
     private static final double JIT = STEP * 0.1;
 
+    @Override
+    public String getDescription() {
+        return "Raises a shield before the hit lands instead of after it.";
+    }
+
     public AutoBlockIn() {
         super("AutoBlockIn", Category.PLAYER, false);
 

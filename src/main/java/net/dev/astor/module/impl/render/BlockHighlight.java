@@ -32,6 +32,11 @@ public class BlockHighlight extends Module {
     public final ColorProperty outlineColor = new ColorProperty("OutlineColor", 0xFFFFFFFF);
     public final ColorProperty fillColor = new ColorProperty("FillColor", 0x66FFFFFF);
 
+    @Override
+    public String getDescription() {
+        return "Outlines the block you are looking at, in several styles.";
+    }
+
     public BlockHighlight() {
         super("BlockHighlight", Category.RENDER, false);
     }

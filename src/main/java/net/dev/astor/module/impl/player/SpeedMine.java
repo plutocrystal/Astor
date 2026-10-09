@@ -14,7 +14,19 @@ import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 public class SpeedMine extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
     public final PercentProperty speed = new PercentProperty("Speed", 15);
-    public final IntProperty delay = new IntProperty("Delay", 0, 0, 4);
+    /**
+     * Milliseconds of mining cooldown to enforce.
+     *
+     * <p>{@code blockHitDelay} counts ticks, so the value is divided by 50 where it is written.
+     * Anything under 50ms floors to zero and the +1 tick vanilla always needs still applies, so the
+     * floor is one tick rather than zero.</p>
+     */
+    public final IntProperty delay = new IntProperty("Delay", 0, 0, 200);
+
+    @Override
+    public String getDescription() {
+        return "Speeds up block breaking by raising how fast the damage accumulates.";
+    }
 
     public SpeedMine() {
         super("SpeedMine", Category.PLAYER, false);
@@ -26,7 +38,7 @@ public class SpeedMine extends Module {
             if (!mc.playerController.isInCreativeMode()) {
                 if (mc.objectMouseOver != null && mc.objectMouseOver.typeOfHit == MovingObjectType.BLOCK) {
                     ((IAccessorPlayerControllerMP) mc.playerController)
-                            .setBlockHitDelay(Math.min(((IAccessorPlayerControllerMP) mc.playerController).getBlockHitDelay(), this.delay.getValue() + 1));
+                            .setBlockHitDelay(Math.min(((IAccessorPlayerControllerMP) mc.playerController).getBlockHitDelay(), this.delay.getValue() / 50 + 1));
                     if (((IAccessorPlayerControllerMP) mc.playerController).getIsHittingBlock()) {
                         float curBlockDamageMP = ((IAccessorPlayerControllerMP) mc.playerController).getCurBlockDamageMP();
                         float damage = 0.3F * (this.speed.getValue().floatValue() / 100.0F);

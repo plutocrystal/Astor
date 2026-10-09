@@ -60,6 +60,11 @@ public class LongJump extends Module {
                 : (double) this.motion.getValue();
     }
 
+    @Override
+    public String getDescription() {
+        return "Charges a jump with a fireball and launches you much further than a normal jump.";
+    }
+
     public LongJump() {
         super("LongJump", Category.MOVEMENT, false);
     }

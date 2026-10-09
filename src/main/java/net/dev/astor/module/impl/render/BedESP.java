@@ -59,6 +59,11 @@ public class BedESP extends Module {
         );
     }
 
+    @Override
+    public String getDescription() {
+        return "Highlights nearby beds and players around them so you can find fights faster.";
+    }
+
     public BedESP() {
         super("BedESP", Category.RENDER, false);
         this.customColor = new ColorProperty("CustomColor", 0xFFFF5555, () -> this.color.getValue() == 0);

@@ -16,6 +16,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Objects;
 
 public class Astor {
@@ -73,18 +74,27 @@ public class Astor {
         commandManager.commands.add(new ToggleCommand());
         commandManager.commands.add(new VclipCommand());
         for (Module module : moduleManager.modules.values()) {
+            // Walk the hierarchy from the base class down so Module's own properties (Hide) are
+            // registered first and end up at the top of the module's row in the click gui.
+            ArrayList<Class<?>> hierarchy = new ArrayList<>();
+            for (Class<?> type = module.getClass(); type != null && type != Object.class; type = type.getSuperclass()) {
+                hierarchy.add(type);
+            }
+            Collections.reverse(hierarchy);
             ArrayList<Property<?>> properties = new ArrayList<>();
-            for (final Field field : module.getClass().getDeclaredFields()) {
-                field.setAccessible(true);
-                final Object obj;
-                try {
-                    obj = field.get(module);
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
-                if (obj instanceof Property<?>) {
-                    ((Property<?>) obj).setOwner(module);
-                    properties.add((Property<?>) obj);
+            for (Class<?> type : hierarchy) {
+                for (final Field field : type.getDeclaredFields()) {
+                    field.setAccessible(true);
+                    final Object obj;
+                    try {
+                        obj = field.get(module);
+                    } catch (IllegalAccessException e) {
+                        throw new RuntimeException(e);
+                    }
+                    if (obj instanceof Property<?> && !properties.contains(obj)) {
+                        ((Property<?>) obj).setOwner(module);
+                        properties.add((Property<?>) obj);
+                    }
                 }
             }
             propertyManager.properties.put(module.getClass(), properties);

@@ -1,12 +1,12 @@
 package net.dev.astor.module.impl.render;
 
 import net.dev.astor.module.Category;
-import net.dev.astor.Astor;
 import net.dev.astor.enums.ChatColors;
 import net.dev.astor.event.EventTarget;
 import net.dev.astor.event.events.impl.render.Render3DEvent;
 import net.dev.astor.mixin.render.IAccessorRenderManager;
 import net.dev.astor.module.Module;
+import net.dev.astor.module.impl.misc.Target;
 import net.dev.astor.util.ColorUtil;
 import net.dev.astor.util.RenderUtil;
 import net.dev.astor.util.TeamUtil;
@@ -17,13 +17,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.boss.EntityDragon;
-import net.minecraft.entity.boss.EntityWither;
-import net.minecraft.entity.monster.*;
-import net.minecraft.entity.passive.EntityAnimal;
-import net.minecraft.entity.passive.EntityBat;
-import net.minecraft.entity.passive.EntitySquid;
-import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Potion;
@@ -54,52 +47,31 @@ public class NameTags extends Module {
     public final BooleanProperty armor = new BooleanProperty("Armor", true);
     public final BooleanProperty effects = new BooleanProperty("Effects", true);
     public final BooleanProperty players = new BooleanProperty("Players", true);
-    public final BooleanProperty friends = new BooleanProperty("Friends", true);
     public final BooleanProperty enemies = new BooleanProperty("Enemies", true);
-    public final BooleanProperty bossees = new BooleanProperty("Bosses", false);
-    public final BooleanProperty mobs = new BooleanProperty("Mobs", false);
-    public final BooleanProperty creepers = new BooleanProperty("Creepers", false);
-    public final BooleanProperty endermans = new BooleanProperty("Endermen", false);
-    public final BooleanProperty blazes = new BooleanProperty("Blazes", false);
-    public final BooleanProperty animals = new BooleanProperty("Animals", false);
     public final BooleanProperty self = new BooleanProperty("Self", false);
-    public final BooleanProperty bots = new BooleanProperty("Bots", false);
+
+    @Override
+    public String getDescription() {
+        return "Draws player names with health, armour and distance in several formats.";
+    }
 
     public NameTags() {
         super("NameTags", Category.RENDER, false);
     }
 
     public boolean shouldRenderTags(EntityLivingBase entityLivingBase) {
-        if (entityLivingBase.deathTime > 0) {
+        if (mc.getRenderViewEntity().getDistanceToEntity(entityLivingBase) > 512.0F) {
             return false;
-        } else if (mc.getRenderViewEntity().getDistanceToEntity(entityLivingBase) > 512.0F) {
-            return false;
-        } else if (entityLivingBase instanceof EntityPlayer) {
-            if (entityLivingBase != mc.thePlayer && entityLivingBase != mc.getRenderViewEntity()) {
-                if (TeamUtil.isBot((EntityPlayer) entityLivingBase)) {
-                    return this.bots.getValue();
-                } else if (TeamUtil.isFriend((EntityPlayer) entityLivingBase)) {
-                    return this.friends.getValue();
-                } else {
-                    return TeamUtil.isTarget((EntityPlayer) entityLivingBase) ? this.enemies.getValue() : this.players.getValue();
-                }
-            } else {
-                return this.self.getValue() && mc.gameSettings.thirdPersonView != 0;
-            }
-        } else if (entityLivingBase instanceof EntityDragon || entityLivingBase instanceof EntityWither) {
-            return !entityLivingBase.isInvisible() && this.bossees.getValue();
-        } else if (!(entityLivingBase instanceof EntityMob) && !(entityLivingBase instanceof EntitySlime)) {
-            return (entityLivingBase instanceof EntityAnimal
-                    || entityLivingBase instanceof EntityBat
-                    || entityLivingBase instanceof EntitySquid
-                    || entityLivingBase instanceof EntityVillager) && this.animals.getValue();
-        } else if (entityLivingBase instanceof EntityCreeper) {
-            return this.creepers.getValue();
-        } else if (entityLivingBase instanceof EntityEnderman) {
-            return this.endermans.getValue();
-        } else {
-            return entityLivingBase instanceof EntityBlaze ? this.blazes.getValue() : this.mobs.getValue();
         }
+        if (entityLivingBase instanceof EntityPlayer) {
+            if (entityLivingBase != mc.thePlayer && entityLivingBase != mc.getRenderViewEntity()) {
+                return TeamUtil.isTarget((EntityPlayer) entityLivingBase) ? this.enemies.getValue() : this.players.getValue();
+            }
+            return this.self.getValue() && mc.gameSettings.thirdPersonView != 0;
+        }
+        // Which kinds of mob get a tag is the Target module's call, so a nametag never floats over
+        // an entity the combat modules would refuse to act on.
+        return !entityLivingBase.isInvisible() && Target.get().isTargetable(entityLivingBase);
     }
 
     @EventTarget
@@ -229,23 +201,14 @@ public class NameTags extends Module {
                                     GlStateManager.popMatrix();
                                 }
                             }
-                            if (TeamUtil.isFriend((EntityPlayer) entity)) {
+                            Color listColor = TeamUtil.getListColor(entity);
+                            if (listColor != null) {
                                 RenderUtil.enableRenderState();
                                 float x1 = (float) (-width) / 2.0F - 1.0F;
                                 view = (float) (-mc.fontRendererObj.FONT_HEIGHT) - 1.0F;
                                 float y1 = (float) width / 2.0F + 1.0F;
                                 float offset = this.shadow.getValue() ? 0.0F : -1.0F;
-                                int friendColor = Astor.friendManager.getColor().getRGB();
-                                RenderUtil.drawOutlineRect(x1, view, y1, offset, 1.5F, 0, friendColor);
-                                RenderUtil.disableRenderState();
-                            } else if (TeamUtil.isTarget((EntityPlayer) entity)) {
-                                RenderUtil.enableRenderState();
-                                float x1 = (float) (-width) / 2.0F - 1.0F;
-                                view = (float) (-mc.fontRendererObj.FONT_HEIGHT) - 1.0F;
-                                float y1 = (float) width / 2.0F + 1.0F;
-                                float offset = this.shadow.getValue() ? 0.0F : -1.0F;
-                                int targetColor = Astor.targetManager.getColor().getRGB();
-                                RenderUtil.drawOutlineRect(x1, view, y1, offset, 1.5F, 0, targetColor);
+                                RenderUtil.drawOutlineRect(x1, view, y1, offset, 1.5F, 0, listColor.getRGB());
                                 RenderUtil.disableRenderState();
                             }
                         }

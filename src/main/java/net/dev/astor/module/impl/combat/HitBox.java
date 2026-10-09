@@ -10,28 +10,16 @@ import net.dev.astor.event.events.impl.render.Render3DEvent;
 import net.dev.astor.event.events.impl.player.TickEvent;
 import net.dev.astor.mixin.render.IAccessorRenderManager;
 import net.dev.astor.module.Module;
+import net.dev.astor.module.impl.misc.Target;
 import net.dev.astor.util.RenderUtil;
-import net.dev.astor.util.TeamUtil;
 import net.dev.astor.property.properties.BooleanProperty;
 import net.dev.astor.property.properties.ColorProperty;
 import net.dev.astor.property.properties.FloatProperty;
-import net.dev.astor.property.properties.ModeProperty;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.boss.EntityDragon;
-import net.minecraft.entity.boss.EntityWither;
 import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.entity.item.EntityItemFrame;
-import net.minecraft.entity.monster.EntityIronGolem;
-import net.minecraft.entity.monster.EntityMob;
-import net.minecraft.entity.monster.EntitySilverfish;
-import net.minecraft.entity.monster.EntitySlime;
-import net.minecraft.entity.passive.EntityAnimal;
-import net.minecraft.entity.passive.EntityBat;
-import net.minecraft.entity.passive.EntitySquid;
-import net.minecraft.entity.passive.EntityVillager;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
@@ -44,11 +32,14 @@ public class HitBox extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
     private MovingObjectPosition targetEntity = null;
     public final FloatProperty multiplier = new FloatProperty("Multiplier", 1.2F, 1.0F, 5.0F);
-    public final ModeProperty showHitbox = new ModeProperty("ShowHitbox", 0, new String[]{"None", "Players", "Mobs", "Animals", "All"});
+    public final BooleanProperty showHitbox = new BooleanProperty("ShowHitbox", false);
 
-    public final ColorProperty color = new ColorProperty("Color", 0x96FFFFFF, () -> this.showHitbox.getValue() != 0);
-    public final BooleanProperty teams = new BooleanProperty("Teams", true, () -> this.showHitbox.getValue() == 1 || this.showHitbox.getValue() == 4);
-    public final BooleanProperty botCheck = new BooleanProperty("BotCheck", true, () -> this.showHitbox.getValue() == 1 || this.showHitbox.getValue() == 4);
+    public final ColorProperty color = new ColorProperty("Color", 0x96FFFFFF, this.showHitbox::getValue);
+
+    @Override
+    public String getDescription() {
+        return "Widens the hitbox used for picking and raytracing, so you can select and reach entities more easily.";
+    }
 
     public HitBox() {
         super("HitBox", Category.COMBAT, false);
@@ -86,6 +77,11 @@ public class HitBox extends Module {
             );
             double closestDistance = distance;
             for (Entity entity : entities) {
+                // Never point at a friend or a teammate, otherwise the enlarged box makes the
+                // client hit someone it is supposed to leave alone.
+                if (entity instanceof EntityLivingBase && !Target.get().isValidTarget((EntityLivingBase) entity)) {
+                    continue;
+                }
                 if (entity.canBeCollidedWith()) {
                     float collisionSize = (float) ((double) entity.getCollisionBorderSize() * getExpansion(entity));
                     AxisAlignedBB expandedBox = entity.getEntityBoundingBox().expand(collisionSize, collisionSize, collisionSize);
@@ -123,10 +119,7 @@ public class HitBox extends Module {
     }
 
     private boolean shouldShowEntity(EntityLivingBase entity) {
-        if (entity == mc.thePlayer) {
-            return false;
-        }
-        if (entity.deathTime > 0 || entity instanceof EntityArmorStand || entity.isInvisible()) {
+        if (entity == mc.thePlayer || entity instanceof EntityArmorStand || entity.isInvisible()) {
             return false;
         }
         if (mc.getRenderViewEntity().getDistanceToEntity(entity) > 128.0F) {
@@ -135,55 +128,9 @@ public class HitBox extends Module {
         if (!entity.ignoreFrustumCheck && !RenderUtil.isInViewFrustum(entity.getEntityBoundingBox(), 0.1F)) {
             return false;
         }
-        switch (this.showHitbox.getValue()) {
-            case 0:
-                return false;
-            case 1:
-                if (entity instanceof EntityPlayer) {
-                    EntityPlayer player = (EntityPlayer) entity;
-                    if (TeamUtil.isFriend(player)) {
-                        return false;
-                    }
-                    if (this.teams.getValue() && TeamUtil.isSameTeam(player)) {
-                        return false;
-                    }
-                    if (this.botCheck.getValue() && TeamUtil.isBot(player)) {
-                        return false;
-                    }
-                    return true;
-                }
-                return false;
-            case 2:
-                if (entity instanceof EntityDragon || entity instanceof EntityWither) {
-                    return true;
-                }
-                if (entity instanceof EntityMob || entity instanceof EntitySlime) {
-                    return !(entity instanceof EntitySilverfish);
-                }
-                return false;
-            case 3:
-                return entity instanceof EntityAnimal
-                        || entity instanceof EntityBat
-                        || entity instanceof EntitySquid
-                        || entity instanceof EntityVillager
-                        || entity instanceof EntityIronGolem;
-            case 4:
-                if (entity instanceof EntityPlayer) {
-                    EntityPlayer player = (EntityPlayer) entity;
-                    if (TeamUtil.isFriend(player)) {
-                        return false;
-                    }
-                    if (this.teams.getValue() && TeamUtil.isSameTeam(player)) {
-                        return false;
-                    }
-                    if (this.botCheck.getValue() && TeamUtil.isBot(player)) {
-                        return false;
-                    }
-                }
-                return true;
-            default:
-                return false;
-        }
+        // Which kinds are worth drawing is the Target module's call, so the boxes on screen always
+        // match the entities the combat modules are allowed to act on.
+        return Target.get().isTargetable(entity);
     }
 
     @EventTarget
@@ -202,7 +149,7 @@ public class HitBox extends Module {
 
     @EventTarget
     public void onRender(Render3DEvent event) {
-        if (this.isEnabled() && this.showHitbox.getValue() != 0) {
+        if (this.isEnabled() && this.showHitbox.getValue()) {
             List<EntityLivingBase> entities = mc.theWorld.loadedEntityList
                     .stream()
                     .filter(entity -> entity instanceof EntityLivingBase)

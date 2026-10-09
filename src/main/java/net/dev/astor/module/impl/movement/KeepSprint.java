@@ -12,6 +12,11 @@ public class KeepSprint extends Module {
     public final BooleanProperty groundOnly = new BooleanProperty("GroundOnly", false);
     public final BooleanProperty reachOnly = new BooleanProperty("ReachOnly", false);
 
+    @Override
+    public String getDescription() {
+        return "Keeps you sprinting through an attack, softening the slowdown that normally breaks it.";
+    }
+
     public KeepSprint() {
         super("KeepSprint", Category.MOVEMENT, false);
     }

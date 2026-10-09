@@ -39,6 +39,11 @@ public class NoFall extends Module {
         return this.slowFalling;
     }
 
+    @Override
+    public String getDescription() {
+        return "Keeps you from taking fall damage, by packet, blink, ground spoof or a spoofed position.";
+    }
+
     public NoFall() {
         super("NoFall", Category.MOVEMENT, false);
     }

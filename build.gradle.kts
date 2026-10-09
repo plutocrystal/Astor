@@ -125,6 +125,9 @@ tasks.shadowJar {
 }
 tasks.assemble.get().dependsOn(tasks.remapJar)
 
+// Gradle.buildFinished is deprecated in favour of FlowProviders.getBuildWorkResult(), but that only
+// works when wired into a task and this build does not use the configuration cache, so keep it.
+@Suppress("DEPRECATION")
 gradle.buildFinished {
 
     val vscodeDir = file(".vscode")

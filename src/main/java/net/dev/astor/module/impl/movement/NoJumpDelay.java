@@ -12,7 +12,19 @@ import net.minecraft.client.Minecraft;
 
 public class NoJumpDelay extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
-    public final IntProperty delay = new IntProperty("Delay", 3, 0, 8);
+    /**
+     * Milliseconds of jump cooldown to enforce.
+     *
+     * <p>{@code jumpTicks} counts ticks, so the value is divided by 50 where it is written. Anything
+     * under 50ms floors to zero and the +1 tick vanilla always needs still applies, so the floor is
+     * one tick rather than zero.</p>
+     */
+    public final IntProperty delay = new IntProperty("Delay", 0, 0, 400);
+
+    @Override
+    public String getDescription() {
+        return "Shortens the cooldown between jumps.";
+    }
 
     public NoJumpDelay() {
         super("NoJumpDelay", Category.MOVEMENT, false);
@@ -22,7 +34,7 @@ public class NoJumpDelay extends Module {
     public void onTick(TickEvent event) {
         if (this.isEnabled() && event.getType() == EventType.PRE) {
             ((IAccessorEntityLivingBase) mc.thePlayer)
-                    .setJumpTicks(Math.min(((IAccessorEntityLivingBase) mc.thePlayer).getJumpTicks(), this.delay.getValue() + 1));
+                    .setJumpTicks(Math.min(((IAccessorEntityLivingBase) mc.thePlayer).getJumpTicks(), this.delay.getValue() / 50 + 1));
         }
     }
 

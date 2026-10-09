@@ -146,6 +146,11 @@ public class Xray extends Module {
         }
     }
 
+    @Override
+    public String getDescription() {
+        return "Seeks out ore and cave air through the stone instead of digging for it.";
+    }
+
     public Xray() {
         super("Xray", Category.RENDER, false);
     }

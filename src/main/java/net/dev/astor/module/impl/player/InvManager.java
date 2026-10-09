@@ -27,11 +27,23 @@ public class InvManager extends Module {
     private int oDelay = 0;
     private boolean inventoryOpen = false;
     private final TimerUtil autoArmorTime = new TimerUtil();
-    public final IntProperty minDelay = new IntProperty("MinDelay", 1, 0, 20);
-    public final IntProperty maxDelay = new IntProperty("MaxDelay", 2, 0, 20);
-    public final IntProperty openDelay = new IntProperty("OpenDelay", 1, 0, 20);
+    /**
+     * Milliseconds between inventory actions.
+     *
+     * <p>{@link #actionDelay} is a tick counter, so the value is divided by 50 where it is rolled
+     * into it. Anything under 50ms floors to zero ticks - the counter cannot store it.</p>
+     */
+    public final IntProperty minDelay = new IntProperty("MinDelay", 50, 0, 1000);
+
+    /** Milliseconds. See {@link #minDelay}. */
+    public final IntProperty maxDelay = new IntProperty("MaxDelay", 100, 0, 1000);
+
+    /** Milliseconds before the inventory is treated as open. See {@link #minDelay}. */
+    public final IntProperty openDelay = new IntProperty("OpenDelay", 50, 0, 1000);
     public final BooleanProperty autoArmor = new BooleanProperty("AutoArmor", true);
-    public final IntProperty autoArmorInterval = new IntProperty("AutoArmorInterval", 0, 0, 100, this.autoArmor::getValue);
+
+    /** Milliseconds between automatic armour re-equips. */
+    public final IntProperty autoArmorInterval = new IntProperty("AutoArmorInterval", 0, 0, 5000, this.autoArmor::getValue);
     public final BooleanProperty dropTrash = new BooleanProperty("DropTrash", false);
     public final BooleanProperty checkDurability = new BooleanProperty("CheckDurability", true);
     public final IntProperty swordSlot = new IntProperty("SwordSlot", 1, 0, 9);
@@ -72,6 +84,11 @@ public class InvManager extends Module {
         }
     }
 
+    @Override
+    public String getDescription() {
+        return "Sorts and cleans your inventory automatically, equipping armour as it goes.";
+    }
+
     public InvManager() {
         super("InvManager", Category.PLAYER, false);
     }
@@ -92,7 +109,7 @@ public class InvManager extends Module {
             } else {
                 if (!this.inventoryOpen) {
                     this.inventoryOpen = true;
-                    this.oDelay = this.openDelay.getValue() + 1;
+                    this.oDelay = this.openDelay.getValue() / 50 + 1;
                     this.autoArmorTime.reset();
                 }
                 if (this.oDelay <= 0 && this.actionDelay <= 0) {
@@ -131,7 +148,7 @@ public class InvManager extends Module {
                         int inventoryBowSlot = ItemUtil.findBowInventorySlot(preferredBowHotbarSlot, this.checkDurability.getValue());
                         if (inventoryBowSlot == -1)
                             inventoryBowSlot = ItemUtil.findBowInventorySlot(preferredBowHotbarSlot, false);
-                        if (this.autoArmor.getValue() && this.autoArmorTime.hasTimeElapsed(this.autoArmorInterval.getValue() * 50L)) {
+                        if (this.autoArmor.getValue() && this.autoArmorTime.hasTimeElapsed(this.autoArmorInterval.getValue().longValue())) {
                             for (int i = 0; i < 4; i++) {
                                 int equippedSlot = equippedArmorSlots.get(i);
                                 int inventorySlot = inventoryArmorSlots.get(i);
@@ -253,7 +270,7 @@ public class InvManager extends Module {
 
     @EventTarget
     public void onClick(WindowClickEvent event) {
-        this.actionDelay = RandomUtils.nextInt(this.minDelay.getValue() + 1, this.maxDelay.getValue() + 2);
+        this.actionDelay = RandomUtils.nextInt(this.minDelay.getValue() / 50 + 1, this.maxDelay.getValue() / 50 + 2);
     }
 
     @Override

@@ -16,6 +16,11 @@ public class Sprint extends Module {
     private boolean wasSprinting = false;
     public final BooleanProperty foxFix = new BooleanProperty("FovFix", true);
 
+    @Override
+    public String getDescription() {
+        return "Sprints automatically, with an optional field-of-view fix for the view change.";
+    }
+
     public Sprint() {
         super("Sprint", Category.MOVEMENT, true, true);
     }

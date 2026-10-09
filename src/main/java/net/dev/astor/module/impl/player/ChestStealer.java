@@ -30,9 +30,20 @@ public class ChestStealer extends Module {
     private int oDelay = 0;
     private boolean inChest = false;
     private boolean warnedFull = false;
-    public final IntProperty minDelay = new IntProperty("MinDelay", 1, 0, 20);
-    public final IntProperty maxDelay = new IntProperty("MaxDelay", 2, 0, 20);
-    public final IntProperty openDelay = new IntProperty("OpenDelay", 1, 0, 20);
+
+    /**
+     * Milliseconds between slot clicks.
+     *
+     * <p>{@link #clickDelay} is a tick counter, so the value is divided by 50 where it is rolled into
+     * it. Anything under 50ms floors to zero ticks - the counter cannot store it.</p>
+     */
+    public final IntProperty minDelay = new IntProperty("MinDelay", 50, 0, 1000);
+
+    /** Milliseconds. See {@link #minDelay}. */
+    public final IntProperty maxDelay = new IntProperty("MaxDelay", 100, 0, 1000);
+
+    /** Milliseconds before the chest is treated as open. See {@link #minDelay}. */
+    public final IntProperty openDelay = new IntProperty("OpenDelay", 50, 0, 1000);
     public final BooleanProperty autoClose = new BooleanProperty("AutoClose", false);
     public final BooleanProperty nameCheck = new BooleanProperty("NameCheck", true);
     public final BooleanProperty skipTrash = new BooleanProperty("SkipTrash", true);
@@ -85,6 +96,11 @@ public class ChestStealer extends Module {
         mc.playerController.windowClick(windowId, slotId, 0, 1, mc.thePlayer);
     }
 
+    @Override
+    public String getDescription() {
+        return "Moves items out of an open chest into your inventory on its own.";
+    }
+
     public ChestStealer() {
         super("ChestStealer", Category.PLAYER, false);
     }
@@ -108,7 +124,7 @@ public class ChestStealer extends Module {
                     if (!this.inChest) {
                         this.inChest = true;
                         this.warnedFull = false;
-                        this.oDelay = this.openDelay.getValue() + 1;
+                        this.oDelay = this.openDelay.getValue() / 50 + 1;
                     }
                     if (this.oDelay <= 0 && this.clickDelay <= 0) {
                         if (this.isEnabled() && this.isValidGameMode()) {
@@ -248,7 +264,7 @@ public class ChestStealer extends Module {
 
     @EventTarget
     public void onWindowClick(WindowClickEvent event) {
-        this.clickDelay = RandomUtils.nextInt(this.minDelay.getValue() + 1, this.maxDelay.getValue() + 2);
+        this.clickDelay = RandomUtils.nextInt(this.minDelay.getValue() / 50 + 1, this.maxDelay.getValue() / 50 + 2);
     }
 
     @Override

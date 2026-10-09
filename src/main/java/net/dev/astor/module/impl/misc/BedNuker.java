@@ -94,7 +94,6 @@ public class BedNuker extends Module {
     public final BooleanProperty whiteList = new BooleanProperty("Whitelist", true);
     public final BooleanProperty swing = new BooleanProperty("Swing", true);
     public final ModeProperty moveFix = new ModeProperty("MoveFix", 1, new String[]{"None", "Silent", "Strict"});
-    public final ModeProperty showTarget = new ModeProperty("ShowTarget", 1, new String[]{"None", "Default", "Hud"});
     public final ModeProperty showProgress = new ModeProperty("ShowProgress", 1, new String[]{"None", "Default", "Hud"});
 
     private void resetBreaking() {
@@ -330,6 +329,11 @@ public class BedNuker extends Module {
         }
     }
 
+    @Override
+    public String getDescription() {
+        return "Breaks nearby beds automatically, with an option to swap to a pickaxe first.";
+    }
+
     public BedNuker() {
         super("BedNuker", Category.MISC, false);
     }
@@ -340,6 +344,14 @@ public class BedNuker extends Module {
 
     public boolean isBreaking() {
         return this.targetBed != null && this.breaking;
+    }
+
+    public BlockPos getTargetBed() {
+        return this.targetBed;
+    }
+
+    public float getBreakProgress() {
+        return this.breakProgress;
     }
 
     @EventTarget(Priority.HIGH)
@@ -533,18 +545,16 @@ public class BedNuker extends Module {
     public void onRender3D(Render3DEvent event) {
         if (this.isEnabled() && this.targetBed != null && !mc.theWorld.isAirBlock(this.targetBed)) {
             mc.theWorld.sendBlockBreakProgress(mc.thePlayer.getEntityId(), this.targetBed, (int) (this.calcProgress() * 10.0F) - 1);
-            if (this.showTarget.getValue() != 0) {
-                BedESP bedESP = (BedESP) Astor.moduleManager.modules.get(BedESP.class);
-                Color color = this.getProgressColor(this.showTarget.getValue());
-                RenderUtil.enableRenderState();
-                BlockPos target = this.targetBed;
-                double newHeight = this.isBed ? bedESP.getHeight() : 1.0;
-                int r = color.getRed();
-                int g = color.getBlue();
-                int b = color.getGreen();
-                RenderUtil.drawBlockBox(target, newHeight, r, b, g);
-                RenderUtil.disableRenderState();
-            }
+            BedESP bedESP = (BedESP) Astor.moduleManager.modules.get(BedESP.class);
+            Color color = this.getProgressColor(1);
+            RenderUtil.enableRenderState();
+            BlockPos target = this.targetBed;
+            double newHeight = this.isBed ? bedESP.getHeight() : 1.0;
+            int r = color.getRed();
+            int g = color.getBlue();
+            int b = color.getGreen();
+            RenderUtil.drawBlockBox(target, newHeight, r, b, g);
+            RenderUtil.disableRenderState();
         }
     }
 

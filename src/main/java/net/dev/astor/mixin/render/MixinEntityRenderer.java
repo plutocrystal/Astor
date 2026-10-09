@@ -8,12 +8,13 @@ import net.dev.astor.event.events.impl.render.RaytraceEvent;
 import net.dev.astor.event.events.impl.render.Render3DEvent;
 import net.dev.astor.mixin.player.IAccessorEntityLivingBase;
 import net.dev.astor.mixin.player.IAccessorEntityPlayer;
-import net.dev.astor.module.impl.combat.KillAura;
+import net.dev.astor.module.impl.combat.killaura.KillAura;
 import net.dev.astor.module.impl.player.AntiDebuff;
 import net.dev.astor.module.impl.player.AutoBlockIn;
 import net.dev.astor.module.impl.player.AutoTool;
 import net.dev.astor.module.impl.player.GhostHand;
 import net.dev.astor.module.impl.player.Scaffold;
+import net.dev.astor.module.impl.render.Ambience;
 import net.dev.astor.module.impl.render.AspectRatio;
 import net.dev.astor.module.impl.render.NoHurtCam;
 import net.dev.astor.module.impl.render.NoRender;
@@ -28,6 +29,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.Vec3;
+import net.minecraft.world.biome.WorldChunkManager;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.util.glu.Project;
@@ -55,6 +57,16 @@ public abstract class MixinEntityRenderer {
     @Shadow
     private float thirdPersonDistance;
 
+    /**
+     * Only here so the ViewBobbing redirect below can put the call back when the option is off.
+     * setupViewBobbing is private in EntityRenderer, so there is no other way to reach it - and
+     * calling the shadow inside a merged mixin is just a call to the target's own method.
+     */
+    @Shadow
+    private void setupViewBobbing(float partialTicks) {
+        throw new AssertionError();
+    }
+
     @Inject(
             method = {"updateCameraAndRender"},
             at = {@At("HEAD")}
@@ -64,6 +76,10 @@ public abstract class MixinEntityRenderer {
             Scaffold scaffold = (Scaffold) Astor.moduleManager.modules.get(Scaffold.class);
             if (scaffold.isEnabled() && scaffold.itemSpoof.getValue()) {
                 this.spoofItem(scaffold.getSlot());
+            }
+            AutoTool autoTool = (AutoTool) Astor.moduleManager.modules.get(AutoTool.class);
+            if (autoTool.isEnabled() && autoTool.itemSpoof.getValue()) {
+                this.spoofItem(autoTool.getSlot());
             }
             KillAura killAura = (KillAura) Astor.moduleManager.modules.get(KillAura.class);
             if (killAura.isEnabled() && killAura.isBlocking()) {
@@ -224,6 +240,25 @@ public abstract class MixinEntityRenderer {
         }
     }
 
+    /**
+     * NoRender's ViewBobbing. Scoped to setupCameraTransform on purpose: setupViewBobbing is called
+     * from renderHand as well, once around the hand itself and once around the overlays, and those
+     * two are left alone so the hand keeps bobbing while the view stops.
+     */
+    @Redirect(
+            method = {"setupCameraTransform"},
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/renderer/EntityRenderer;setupViewBobbing(F)V"
+            )
+    )
+    private void setupViewBobbing(EntityRenderer entityRenderer, float partialTicks) {
+        NoRender noRender = NoRender.get();
+        if (noRender == null || !noRender.viewBobbing.getValue()) {
+            this.setupViewBobbing(partialTicks);
+        }
+    }
+
     @Redirect(
             method = {"orientCamera"},
             at = @At(
@@ -288,6 +323,48 @@ public abstract class MixinEntityRenderer {
         return ((IAccessorEntityLivingBase) entityLivingBase).getActivePotionsMap().containsKey(potion.id);
     }
 
+    /**
+     * Hands every biome to vanilla's cold branch while Ambience is set to Snow.
+     *
+     * <p>1.8.9 has no snow field. renderRainSnow() reads the biome temperature and splits on a bare
+     * {@code >= 0.15F} - at or above is rain, below is snow - and getRainStrength() only decides
+     * whether precipitation is drawn at all. Overriding this one temperature lookup therefore puts the
+     * rendering on the real snow path, texture, UV scroll, alpha and lightmap included, instead of
+     * swapping the texture on a path that was shaped for rain.</p>
+     */
+    @Redirect(
+            method = {"renderRainSnow"},
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/world/biome/WorldChunkManager;getTemperatureAtHeight(FI)F"
+            )
+    )
+    private float snowTemperature(WorldChunkManager manager, float biomeTemperature, int height) {
+        Ambience ambience = Ambience.get();
+        if (ambience != null && ambience.isSnow()) {
+            return Ambience.SNOW_TEMPERATURE;
+        }
+        return manager.getTemperatureAtHeight(biomeTemperature, height);
+    }
+
+    /**
+     * Snow gets neither splashes nor the rain sound, so the whole splash pass is dropped while it is
+     * snowing.
+     *
+     * <p>Cancelling addRainParticles() is equivalent to turning the rain-splash option off, because
+     * splashes and the rain sound are the only things the method does. Going through the option itself
+     * would have meant returning its value from a redirect, which is not possible here - Config lives
+     * outside the compile classpath - and answering unconditionally would quietly override whatever
+     * the player has that option set to.</p>
+     */
+    @Inject(method = {"addRainParticles"}, at = {@At("HEAD")}, cancellable = true)
+    private void snowSkipsSplashes(CallbackInfo callbackInfo) {
+        Ambience ambience = Ambience.get();
+        if (ambience != null && ambience.isSnow()) {
+            callbackInfo.cancel();
+        }
+    }
+
     @Redirect(
             method = {"setupFog"},
             at = @At(
@@ -309,7 +386,8 @@ public abstract class MixinEntityRenderer {
             method = {"setupCameraTransform"},
             at = @At(
                     value = "INVOKE",
-                    target = "Lorg/lwjgl/util/glu/Project;gluPerspective(FFFF)V"
+                    target = "Lorg/lwjgl/util/glu/Project;gluPerspective(FFFF)V",
+                    remap = false
             )
     )
     private void perspectiveCameraTransform(float fov, float aspect, float near, float far) {
@@ -320,7 +398,8 @@ public abstract class MixinEntityRenderer {
             method = {"renderWorldPass"},
             at = @At(
                     value = "INVOKE",
-                    target = "Lorg/lwjgl/util/glu/Project;gluPerspective(FFFF)V"
+                    target = "Lorg/lwjgl/util/glu/Project;gluPerspective(FFFF)V",
+                    remap = false
             )
     )
     private void perspectiveWorldPass(float fov, float aspect, float near, float far) {
@@ -331,7 +410,8 @@ public abstract class MixinEntityRenderer {
             method = {"renderCloudsCheck"},
             at = @At(
                     value = "INVOKE",
-                    target = "Lorg/lwjgl/util/glu/Project;gluPerspective(FFFF)V"
+                    target = "Lorg/lwjgl/util/glu/Project;gluPerspective(FFFF)V",
+                    remap = false
             )
     )
     private void perspectiveClouds(float fov, float aspect, float near, float far) {
@@ -342,7 +422,8 @@ public abstract class MixinEntityRenderer {
             method = {"renderHand"},
             at = @At(
                     value = "INVOKE",
-                    target = "Lorg/lwjgl/util/glu/Project;gluPerspective(FFFF)V"
+                    target = "Lorg/lwjgl/util/glu/Project;gluPerspective(FFFF)V",
+                    remap = false
             )
     )
     private void perspectiveHand(float fov, float aspect, float near, float far) {

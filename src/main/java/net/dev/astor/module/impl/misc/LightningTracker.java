@@ -37,6 +37,11 @@ public class LightningTracker extends Module {
         }
     }
 
+    @Override
+    public String getDescription() {
+        return "Reports the position and compass direction of nearby lightning strikes.";
+    }
+
     public LightningTracker() {
         super("LightningTracker", Category.MISC, false, true);
     }

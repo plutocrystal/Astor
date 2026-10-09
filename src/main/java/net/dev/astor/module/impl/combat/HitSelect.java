@@ -8,6 +8,7 @@ import net.dev.astor.event.types.Priority;
 import net.dev.astor.event.events.impl.network.PacketEvent;
 import net.dev.astor.event.events.impl.player.UpdateEvent;
 import net.dev.astor.module.Module;
+import net.dev.astor.module.impl.misc.Target;
 import net.dev.astor.module.impl.movement.KeepSprint;
 import net.dev.astor.property.properties.ModeProperty;
 import net.minecraft.client.Minecraft;
@@ -29,6 +30,11 @@ public class HitSelect extends Module {
 
     private int blockedHits = 0;
     private int allowedHits = 0;
+
+    @Override
+    public String getDescription() {
+        return "Holds some outgoing hits back so only the ones worth landing actually go through.";
+    }
 
     public HitSelect() {
         super("HitSelect", Category.COMBAT, false);
@@ -81,6 +87,10 @@ public class HitSelect extends Module {
             }
 
             EntityLivingBase living = (EntityLivingBase) target;
+            if (Target.get().isFriendOrTeammate(living)) {
+                // Never hold a swing back on someone we are not meant to be hitting.
+                return;
+            }
             boolean allow = true;
 
             switch (this.mode.getValue()) {

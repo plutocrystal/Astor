@@ -15,6 +15,11 @@ public class NickHider extends Module {
     public final BooleanProperty scoreboard = new BooleanProperty("Scoreboard", true);
     public final BooleanProperty level = new BooleanProperty("Level", true);
 
+    @Override
+    public String getDescription() {
+        return "Replaces your own name in chat, the scoreboard and above your head with the text you set.";
+    }
+
     public NickHider() {
         super("NickHider", Category.MISC, false, true);
     }

@@ -41,6 +41,11 @@ public class SafeWalk extends Module {
         }
     }
 
+    @Override
+    public String getDescription() {
+        return "Stops you walking off the edge, by cancelling the motion that would carry you off.";
+    }
+
     public SafeWalk() {
         super("SafeWalk", Category.MOVEMENT, false);
     }

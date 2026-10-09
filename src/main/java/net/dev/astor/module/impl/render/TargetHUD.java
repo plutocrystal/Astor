@@ -8,7 +8,8 @@ import net.dev.astor.event.types.EventType;
 import net.dev.astor.event.events.impl.network.PacketEvent;
 import net.dev.astor.event.events.impl.render.Render2DEvent;
 import net.dev.astor.module.Module;
-import net.dev.astor.module.impl.combat.KillAura;
+import net.dev.astor.module.impl.combat.killaura.KillAura;
+import net.dev.astor.module.impl.misc.Target;
 import net.dev.astor.util.ColorUtil;
 import net.dev.astor.util.RenderUtil;
 import net.dev.astor.util.TeamUtil;
@@ -66,6 +67,9 @@ public class TargetHUD extends Module {
         if (killAura.isEnabled() && killAura.isAttackAllowed() && TeamUtil.isEntityLoaded(killAura.getTarget())) {
             return killAura.getTarget();
         } else if (!(Boolean) this.kaOnly.getValue()
+                // A packet can carry an attack on a friend or teammate, and the last-target fallback
+                // outlives the entity leaving the world, so re-check before showing it.
+                && Target.get().isValidTarget(this.lastTarget)
                 && !this.lastAttackTimer.hasTimeElapsed(1500L)
                 && TeamUtil.isEntityLoaded(this.lastTarget)) {
             return this.lastTarget;
@@ -85,13 +89,9 @@ public class TargetHUD extends Module {
     }
 
     private Color getTargetColor(EntityLivingBase entityLivingBase) {
-        if (entityLivingBase instanceof EntityPlayer) {
-            if (TeamUtil.isFriend((EntityPlayer) entityLivingBase)) {
-                return Astor.friendManager.getColor();
-            }
-            if (TeamUtil.isTarget((EntityPlayer) entityLivingBase)) {
-                return Astor.targetManager.getColor();
-            }
+        Color listColor = TeamUtil.getListColor(entityLivingBase);
+        if (listColor != null) {
+            return listColor;
         }
         switch (this.color.getValue()) {
             case 0:
@@ -105,6 +105,11 @@ public class TargetHUD extends Module {
             default:
                 return new Color(-1);
         }
+    }
+
+    @Override
+    public String getDescription() {
+        return "Draws the current target and its details in a corner of the screen.";
     }
 
     public TargetHUD() {

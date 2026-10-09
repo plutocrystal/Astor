@@ -8,6 +8,11 @@ public class NoPush extends Module {
     public final BooleanProperty entities = new BooleanProperty("Entities", true);
     public final BooleanProperty blocks = new BooleanProperty("Blocks", true);
 
+    @Override
+    public String getDescription() {
+        return "Stops entities and blocks from pushing you.";
+    }
+
     public NoPush() {
         super("NoPush", Category.MOVEMENT, false);
     }

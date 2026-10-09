@@ -2,25 +2,17 @@ package net.dev.astor.command.commands;
 
 import net.dev.astor.Astor;
 import net.dev.astor.command.Command;
-import net.dev.astor.command.ModuleValueCommand;
 import net.dev.astor.module.Module;
 import net.dev.astor.module.impl.render.HUD;
 import net.dev.astor.util.ChatUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.Locale;
 
 public class HideCommand extends Command {
     public HideCommand() {
         super(new ArrayList<>(Arrays.asList("hide", "h")));
-    }
-
-    @Override
-    public List<String> complete(String[] args) {
-        return args.length == 1 ? new ModuleValueCommand().moduleNames() : Collections.emptyList();
     }
 
     @Override

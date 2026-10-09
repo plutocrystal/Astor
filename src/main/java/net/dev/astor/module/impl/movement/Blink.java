@@ -16,6 +16,11 @@ public class Blink extends Module {
     public final ModeProperty mode = new ModeProperty("Mode", 0, new String[]{"Default", "Pulse"});
     public final IntProperty ticks = new IntProperty("Ticks", 20, 0, 1200);
 
+    @Override
+    public String getDescription() {
+        return "Holds your movement packets back for a set number of ticks, making the server see you stand still.";
+    }
+
     public Blink() {
         super("Blink", Category.MOVEMENT, false);
     }

@@ -44,6 +44,11 @@ public class CustomCape extends Module {
     private final Map<String, ResourceLocation> textures = new LinkedHashMap<>();
     private final List<String> names = new ArrayList<>();
 
+    @Override
+    public String getDescription() {
+        return "Replaces your cape with one loaded from the game folder, and optionally applies it to other players.";
+    }
+
     public CustomCape() {
         super("CustomCape", Category.RENDER, false);
         this.loadCapes();
