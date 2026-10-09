@@ -29,13 +29,6 @@ public class Scoreboard extends Module {
         return scoreboard != null && scoreboard.isEnabled() ? scoreboard : null;
     }
 
-    /**
-     * The slider as an alpha byte, ready to drop into the top of a colour.
-     *
-     * <p>0% comes out as 0, which the blend function discards, so nothing is drawn at all. 100% comes
-     * out as 255, a solid black that is darker than either colour vanilla uses here - vanilla draws its
-     * rows at 31% and its header at 38%.</p>
-     */
     public int getBackgroundAlpha() {
         return Math.round(this.background.getValue() / 100.0F * MAX_ALPHA);
     }

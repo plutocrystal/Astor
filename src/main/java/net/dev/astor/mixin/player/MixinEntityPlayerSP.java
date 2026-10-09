@@ -56,12 +56,7 @@ public abstract class MixinEntityPlayerSP extends MixinEntityPlayer {
         if (this.worldObj.isBlockLoaded(new BlockPos(this.posX, 0.0, this.posZ))) {
             UpdateEvent event = new UpdateEvent(EventType.PRE, this.lastReportedYaw, this.lastReportedPitch, this.rotationYaw, this.rotationPitch);
             EventManager.call(event);
-            // Snapped onto the mouse-notch lattice here rather than in each module, because this is the
-            // one place every rotation passes through: the seven modules that turn the player all go
-            // through UpdateEvent.setRotation, and this is where the result becomes both the override
-            // below and what RotationState reports. Quantized once and fed to both, so what the rotation
-            // state holds is exactly what the player is turned to - otherwise KillAura's dot would aim at
-            // an angle the player is not actually on.
+            
             float yaw = event.getNewYaw();
             float pitch = event.getNewPitch();
             if (event.isRotated()) {

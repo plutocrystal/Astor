@@ -57,11 +57,6 @@ public abstract class MixinEntityRenderer {
     @Shadow
     private float thirdPersonDistance;
 
-    /**
-     * Only here so the ViewBobbing redirect below can put the call back when the option is off.
-     * setupViewBobbing is private in EntityRenderer, so there is no other way to reach it - and
-     * calling the shadow inside a merged mixin is just a call to the target's own method.
-     */
     @Shadow
     private void setupViewBobbing(float partialTicks) {
         throw new AssertionError();
@@ -240,11 +235,6 @@ public abstract class MixinEntityRenderer {
         }
     }
 
-    /**
-     * NoRender's ViewBobbing. Scoped to setupCameraTransform on purpose: setupViewBobbing is called
-     * from renderHand as well, once around the hand itself and once around the overlays, and those
-     * two are left alone so the hand keeps bobbing while the view stops.
-     */
     @Redirect(
             method = {"setupCameraTransform"},
             at = @At(
@@ -323,15 +313,6 @@ public abstract class MixinEntityRenderer {
         return ((IAccessorEntityLivingBase) entityLivingBase).getActivePotionsMap().containsKey(potion.id);
     }
 
-    /**
-     * Hands every biome to vanilla's cold branch while Ambience is set to Snow.
-     *
-     * <p>1.8.9 has no snow field. renderRainSnow() reads the biome temperature and splits on a bare
-     * {@code >= 0.15F} - at or above is rain, below is snow - and getRainStrength() only decides
-     * whether precipitation is drawn at all. Overriding this one temperature lookup therefore puts the
-     * rendering on the real snow path, texture, UV scroll, alpha and lightmap included, instead of
-     * swapping the texture on a path that was shaped for rain.</p>
-     */
     @Redirect(
             method = {"renderRainSnow"},
             at = @At(
@@ -347,16 +328,6 @@ public abstract class MixinEntityRenderer {
         return manager.getTemperatureAtHeight(biomeTemperature, height);
     }
 
-    /**
-     * Snow gets neither splashes nor the rain sound, so the whole splash pass is dropped while it is
-     * snowing.
-     *
-     * <p>Cancelling addRainParticles() is equivalent to turning the rain-splash option off, because
-     * splashes and the rain sound are the only things the method does. Going through the option itself
-     * would have meant returning its value from a redirect, which is not possible here - Config lives
-     * outside the compile classpath - and answering unconditionally would quietly override whatever
-     * the player has that option set to.</p>
-     */
     @Inject(method = {"addRainParticles"}, at = {@At("HEAD")}, cancellable = true)
     private void snowSkipsSplashes(CallbackInfo callbackInfo) {
         Ambience ambience = Ambience.get();

@@ -12,11 +12,11 @@ import java.util.List;
 @SideOnly(Side.CLIENT)
 @Mixin({GuiNewChat.class})
 public interface IAccessorGuiNewChat {
-    /** The lines {@code GuiNewChat.drawChat} actually paints. */
+    
     @Accessor("drawnChatLines")
     List<ChatLine> getDrawnChatLines();
 
-    /** The whole scrollback, walked by {@code GuiNewChat.getChatComponent} while chat is open. */
     @Accessor("chatLines")
     List<ChatLine> getChatLines();
 }
+

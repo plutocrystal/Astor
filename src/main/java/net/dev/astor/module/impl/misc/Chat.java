@@ -5,13 +5,6 @@ import net.dev.astor.module.Category;
 import net.dev.astor.module.Module;
 import net.dev.astor.property.properties.BooleanProperty;
 
-/**
- * Tweaks the vanilla chat log.
- * <p>
- * {@link #noBackground} drops the translucent box vanilla paints behind the chat lines, and
- * {@link #unlimitedChat} lifts the 100 line cap vanilla puts on the scrollback so old lines stop
- * being deleted once the log fills up.
- */
 public class Chat extends Module {
     public final BooleanProperty noBackground = new BooleanProperty("NoBackground", true);
     public final BooleanProperty unlimitedChat = new BooleanProperty("UnlimitedChat", true);
@@ -33,3 +26,4 @@ public class Chat extends Module {
         return chat != null && chat.isEnabled() ? chat : null;
     }
 }
+

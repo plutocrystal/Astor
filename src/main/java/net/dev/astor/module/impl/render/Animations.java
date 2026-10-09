@@ -23,30 +23,11 @@ import net.minecraft.network.play.client.C0APacketAnimation;
 import net.minecraft.util.MathHelper;
 import org.lwjgl.opengl.GL11;
 
-/**
- * Replaces the first-person block and swing animations.
- *
- * <p>Ported from the Animations module in {@code run/src/main/java}. The block animation matrix has 13
- * entries and the swing animation 5; both are reproduced case for case, including the one mode that is
- * listed but has no case - see {@link #blockAnimation}.</p>
- */
 public class Animations extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
 
     private static final int VANILLA = 0;
 
-    /**
-     * Where {@code ItemRenderer.transformFirstPersonItem} puts the hand - the first thing it does is
-     * translate there - so this is the point the item is centred on and therefore the point a size
-     * change has to pivot around.
-     *
-     * <p>Scaling about the camera instead looks like it does nothing, which is why this exists.
-     * transformFirstPersonItem scales the item by 0.4, so a uniform scale s applied around the camera
-     * multiplies both the item's size and its distance from the eye by s - and a perspective
-     * projection's screen size is size/distance, which comes out unchanged. The only thing that
-     * moves is the amount of foreshortening, which on most items is not worth seeing. Scaling about
-     * this anchor instead leaves the item where it already sits and grows it in place.</p>
-     */
     private static final float HAND_ANCHOR_X = 0.56F;
     private static final float HAND_ANCHOR_Y = -0.52F;
     private static final float HAND_ANCHOR_Z = -0.71999997F;
@@ -66,12 +47,10 @@ public class Animations extends Module {
     public final FloatProperty y = new FloatProperty("Y", 0.0F, -1.0F, 1.0F, 2);
     public final FloatProperty z = new FloatProperty("Z", 0.0F, -1.0F, 1.0F, 2);
 
-    /** One rotation per axis, so the hand can be turned in all three directions independently. */
     public final FloatProperty xRotation = new FloatProperty("XRotation", 0.0F, -180.0F, 180.0F, 0);
     public final FloatProperty yRotation = new FloatProperty("YRotation", 0.0F, -180.0F, 180.0F, 0);
     public final FloatProperty zRotation = new FloatProperty("ZRotation", 0.0F, -180.0F, 180.0F, 0);
 
-    /** Uniform on all three axes, so an item cannot be squashed on one side only. */
     public final FloatProperty size = new FloatProperty("Size", 1.0F, 0.1F, 3.0F, 2);
     public final FloatProperty swingSpeed = new FloatProperty("SwingSpeed", 0.0F, -200.0F, 50.0F, 0);
 
@@ -84,44 +63,18 @@ public class Animations extends Module {
     public final FloatProperty aSize = new FloatProperty("ASize", 1.0F, 0.1F, 3.0F, 2);
     public final FloatProperty aSwingSpeed = new FloatProperty("ASwingSpeed", 0.0F, -200.0F, 50.0F, 0);
 
-    /**
-     * The two transform groups. Both are declared after their children on purpose: an instance
-     * initialiser runs in source order, so building the group reads fields that have to be assigned
-     * already.
-     *
-     * <p>The children keep the names the loose properties used to have, so a config written before
-     * the split loads straight into the hand group. The anti-swing group's names are prefixed
-     * because {@link net.dev.astor.config.Config} keys a module's properties by name - two properties
-     * both called "X" would share one entry and the second would overwrite the first on every save.
-     * </p>
-     */
     public final ListProperty hand = new ListProperty(
             "Hand", null, this.x, this.y, this.z,
             this.xRotation, this.yRotation, this.zRotation, this.size, this.swingSpeed);
 
-    /** Only read while {@link #isSwordBlocking()}, so its values sit idle the rest of the time. */
     public final ListProperty antiSwing = new ListProperty(
             "AntiSwing", null, this.aX, this.aY, this.aZ,
             this.aXRotation, this.aYRotation, this.aZRotation, this.aSize, this.aSwingSpeed);
 
-    /**
-     * Drops the hotbar-swap rise: the item appears at its resting place straight away instead of
-     * climbing up into it. Applied by zeroing the equip progress before the hand render reads it,
-     * which is the same value transformFirstPersonItem translates down by.
-     */
     public final BooleanProperty noEquipAnimation = new BooleanProperty("NoEquipAnimation", false);
 
-    /**
-     * Puts the hand on the other side of the screen. A mirror about the plane through the camera
-     * and nothing else - no packet, no handedness change, no inventory slot touched - so it only
-     * affects what is drawn.
-     */
     public final BooleanProperty leftHand = new BooleanProperty("LeftHand", false);
 
-    /**
-     * Counts down from 9 once a swing starts. Read by the 1.9+ swing animation to hold the item back for
-     * the length of the swing.
-     */
     private int swing = 0;
 
     @Override
@@ -140,11 +93,6 @@ public class Animations extends Module {
         return (Animations) Astor.moduleManager.modules.get(Animations.class);
     }
 
-    /**
-     * Suppresses the swing packet while an item is in use, which is what keeps the held item showing its
-     * visual 1.7 pose instead of the 1.8 one. Server-side only: the local swing state is set before the
-     * packet is queued, so this changes what others see and nothing on this screen.
-     */
     @EventTarget
     public void onSendPacket(PacketEvent event) {
         if (this.isEnabled() && event.getType() == EventType.SEND
@@ -161,12 +109,6 @@ public class Animations extends Module {
         }
     }
 
-    /**
-     * Cancels the vanilla hand transform and emits the selected animation instead.
-     *
-     * <p>The outer catch is deliberate: a bad matrix means broken rendering, not an error worth a stack
-     * trace on every frame, and the next frame recomputes from scratch anyway.</p>
-     */
     @EventTarget
     public void onRenderItem(RenderItemEvent event) {
         try {
@@ -180,10 +122,6 @@ public class Animations extends Module {
             float partialTicks = event.getPartialTicks();
             float convertedProgress = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * (float) Math.PI);
 
-            // One group or the other, never both: while a sword is blocking the anti-swing group is
-            // the one in force and the hand group's values are simply not read. Picking here, before
-            // the branch below, is what keeps them from being added together - applying the hand
-            // group up front and the anti-swing one inside the branch would give x=1 plus x=1.
             if (this.isAntiSwingActive(event.isUseItem(), itemAction)) {
                 this.applyTransform(this.aX, this.aY, this.aZ,
                         this.aXRotation, this.aYRotation, this.aZRotation, this.aSize);
@@ -193,10 +131,7 @@ public class Animations extends Module {
             }
 
             if (event.isUseItem()) {
-                // Compared rather than switched on: javac compiles a switch over an enum into a lookup of
-                // a synthetic Animations$1.$SwitchMap$... field, and that field is compiler-generated so it
-                // is in no mapping table and cannot be renamed for the runtime jar. The EnumAction
-                // constants do map, which is what makes this form safe.
+                
                 if (itemAction == EnumAction.NONE) {
                     switch ((int) this.otherAnimation.getValue().longValue()) {
                         case 0:
@@ -209,8 +144,7 @@ public class Animations extends Module {
                             break;
                     }
                 } else if (itemAction == EnumAction.BLOCK) {
-                    // No transform of its own here: the anti-swing group was already applied above
-                    // and the hand group's values are deliberately not folded in on top of it.
+                    
                     switch ((int) this.blockAnimation.getValue().longValue()) {
                             case 0:
                                 itemRenderer.transformFirstPersonItem(animationProgression, 0.0F);
@@ -256,8 +190,7 @@ public class Animations extends Module {
                                 itemRenderer.transformFirstPersonItem(animationProgression, 0.0F);
                                 GlStateManager.translate(0.0F, 0.2F, -1.0F);
                                 GlStateManager.rotate(-59.0F, -1.0F, 0.0F, 3.0F);
-                                // Deliberately not a float: the source passes the long straight in, and the
-                                // division has to truncate the same way.
+                                
                                 GlStateManager.rotate(-(System.currentTimeMillis() / 2L % 360L), 1.0F, 0.0F, 0.0F);
                                 GlStateManager.rotate(60.0F, 0.0F, 1.0F, 0.0F);
                                 break;
@@ -293,14 +226,11 @@ public class Animations extends Module {
                                 break;
 
                             case 10: {
-                                // No transformFirstPersonItem here, unlike every other mode in this
-                                // branch. That is what the source does, so the mode positions the item
-                                // off a bare block transform.
+                                
                                 GlStateManager.translate(0.41F, -0.25F, -0.5555557F);
                                 GlStateManager.translate(0.0F, 0.0F, 0.0F);
                                 GlStateManager.rotate(35.0F, 0.0F, 1.5F, 0.0F);
-                                // swingProgress * swingProgress / 64 divides two floats by an int, so the
-                                // quotient is truncated before the multiply. Kept as written.
+                                
                                 float racism = MathHelper.sin(swingProgress * swingProgress / 64 * (float) Math.PI);
                                 GlStateManager.rotate(racism * -5.0F, 0.0F, 0.0F, 0.0F);
                                 GlStateManager.rotate(convertedProgress * -12.0F, 0.0F, 0.0F, 1.0F);
@@ -316,8 +246,7 @@ public class Animations extends Module {
                                 break;
 
                             default:
-                                // "Allah" is the thirteenth entry but has no case, so selecting it emits no
-                                // transform at all. Left that way rather than quietly drawing something.
+                                
                                 break;
                         }
                 } else if (itemAction == EnumAction.EAT || itemAction == EnumAction.DRINK) {
@@ -386,11 +315,6 @@ public class Animations extends Module {
         }
     }
 
-    /**
-     * Translate, turn, then scale - the order that puts the rotations and the scaling around the item
-     * rather than around the camera. The rotations and the scale are skipped at their neutral values
-     * so a default config leaves the matrix exactly as vanilla would have it.
-     */
     private void applyTransform(FloatProperty translateX, FloatProperty translateY, FloatProperty translateZ,
                                 FloatProperty rotateX, FloatProperty rotateY, FloatProperty rotateZ,
                                 FloatProperty scale) {
@@ -400,9 +324,7 @@ public class Animations extends Module {
         this.rotate(rotateZ, 0.0F, 0.0F, 1.0F);
         float scaleValue = scale.getValue();
         if (scaleValue != 1.0F) {
-            // About the anchor, not the camera - see HAND_ANCHOR. Scaling about the camera is a no-op
-            // that looks like one: it grows the item and pushes it away by the same factor, and the
-            // projected size is size/distance, so the two cancel.
+            
             GlStateManager.translate(HAND_ANCHOR_X, HAND_ANCHOR_Y, HAND_ANCHOR_Z);
             GlStateManager.scale(scaleValue, scaleValue, scaleValue);
             GlStateManager.translate(-HAND_ANCHOR_X, -HAND_ANCHOR_Y, -HAND_ANCHOR_Z);
@@ -416,38 +338,23 @@ public class Animations extends Module {
         }
     }
 
-    /**
-     * Whether the anti-swing group is the one in force. A sword that is in use, which is the same
-     * condition the block animations key off: in this build {@code EnumAction.BLOCK} is only ever
-     * returned by a sword, and the fake-blocking in MixinEntityRenderer is what puts the item in use.
-     *
-     * <p>The two groups are alternatives, never layers. Exactly one set of values is read, so a
-     * hand x of 1 and an anti-swing x of 1 give an x of 1 while blocking, not 2.</p>
-     */
     public boolean isAntiSwingActive(boolean itemInUse, EnumAction action) {
         return itemInUse && action == EnumAction.BLOCK;
     }
 
-    /** The same question asked against the live player, for the code that has no event to read. */
     public boolean isSwordBlocking() {
         if (mc.thePlayer == null) {
             return false;
         }
-        // Null is reachable: this is also called from a hook on EntityLivingBase, so it runs for mobs
-        // and on the integrated server's thread, where the ticked entity is not the player and has no
-        // hand stack at all.
+        
         ItemStack held = mc.thePlayer.getHeldItem();
         return held != null && this.isAntiSwingActive(mc.thePlayer.getItemInUseCount() > 0, held.getItemUseAction());
     }
 
-    /** The anti-swing group's speed while a sword is blocking, the hand group's otherwise. */
     public FloatProperty getActiveSwingSpeed() {
         return this.isSwordBlocking() ? this.aSwingSpeed : this.swingSpeed;
     }
 
-    /**
-     * @see net.minecraft.client.renderer.ItemRenderer#doItemUsedTransformations(float)
-     */
     private void doItemUsedTransformations(float swingProgress) {
         float f = -0.4F * MathHelper.sin(MathHelper.sqrt_float(swingProgress) * 3.1415927F);
         float f1 = 0.2F * MathHelper.sin(MathHelper.sqrt_float(swingProgress) * 3.1415927F * 2.0F);
@@ -455,9 +362,6 @@ public class Animations extends Module {
         GlStateManager.translate(f, f1, f2);
     }
 
-    /**
-     * @see net.minecraft.client.renderer.ItemRenderer#performDrinking(AbstractClientPlayer, float)
-     */
     private void performDrinking(ItemStack itemToRender, AbstractClientPlayer player, float partialTicks) {
         if (itemToRender == null) {
             return;
@@ -476,9 +380,6 @@ public class Animations extends Module {
         GlStateManager.rotate(f3 * 30.0F, 0.0F, 0.0F, 1.0F);
     }
 
-    /**
-     * @see net.minecraft.client.renderer.ItemRenderer#doBowTransformations(float, AbstractClientPlayer)
-     */
     private void doBowTransformations(ItemStack itemToRender, float partialTicks, AbstractClientPlayer player) {
         GlStateManager.rotate(-18.0F, 0.0F, 0.0F, 1.0F);
         GlStateManager.rotate(-12.0F, 0.0F, 1.0F, 0.0F);
@@ -501,13 +402,8 @@ public class Animations extends Module {
         GlStateManager.scale(1.0F, 1.0F, 1.0F + f1 * 0.2F);
     }
 
-    /**
-     * Applies the active group's SwingSpeed to the swing length. Vanilla's 6 ticks become
-     * 6 * (1 - SwingSpeed/100), and the truncation is the source's: anything above 0 and up to 50
-     * lands on a multiplier of 0, which makes the swing length 0 and the swing progress a division
-     * by zero. Kept as written rather than clamped.
-     */
     public int scaleArmSwingAnimationEnd(int animationEnd) {
         return animationEnd * (int) ((-this.getActiveSwingSpeed().getValue() / 100.0F) + 1.0F);
     }
 }
+

@@ -8,8 +8,6 @@ import net.minecraft.network.Packet;
 public class PacketUtil {
     private static final Minecraft mc = Minecraft.getMinecraft();
 
-    // NetworkManager#sendPacket takes a GenericFutureListener varargs; declaring the empty array up front
-    // keeps the call sites below from creating an unchecked generic array.
     @SuppressWarnings("unchecked")
     private static final GenericFutureListener<? extends Future<? super Void>>[] NO_LISTENERS =
             new GenericFutureListener[0];

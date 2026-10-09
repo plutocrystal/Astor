@@ -58,7 +58,7 @@ public final class EventManager {
     }
 
     private static void register(Method method, Object object) {
-        // isMethodBad already guarantees the single parameter is an Event subtype.
+        
         @SuppressWarnings("unchecked")
         Class<? extends Event> indexClass = (Class<? extends Event>) method.getParameterTypes()[0];
 

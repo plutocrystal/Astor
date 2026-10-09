@@ -48,11 +48,6 @@ public abstract class MixinFontRenderer {
     @Shadow
     protected abstract int renderString(String text, float x, float y, int color, boolean dropShadow);
 
-    /**
-     * 1.8.9 的 drawString 把阴影当成一次独立的 renderString 调用，硬编码画在 x+1 / y+1，
-     * 所以只重定向 ordinal 0 这一层（阴影），正文层保持原样。
-     * 收到的 x 已经是 origX+1，减去 0.4 让阴影落到 origX+0.6，文字看起来更粗更实。
-     */
     @Redirect(
             method = {"drawString(Ljava/lang/String;FFIZ)I"},
             at = @At(

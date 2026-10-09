@@ -17,10 +17,6 @@ public class Config {
     public static Minecraft mc = Minecraft.getMinecraft();
     public static Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-    /**
-     * Where every config, friend list and gui layout file lives. Relative to the game directory, so
-     * it resolves to {@code .minecraft/Astor/config}.
-     */
     public static final String CONFIG_DIR = "./Astor/config/";
 
     public String name;
@@ -95,7 +91,7 @@ public class Config {
                     }
 
                     if (object.has("hidden")) {
-                        // Legacy key from before Hide became a real property.
+                        
                         JsonElement hidden = object.get("hidden");
                         if (hidden != null && hidden.isJsonPrimitive()) {
                             module.setHidden(hidden.getAsBoolean());
@@ -152,8 +148,7 @@ public class Config {
                 JsonObject moduleObject = new JsonObject();
                 moduleObject.addProperty("toggled", module.isEnabled());
                 moduleObject.addProperty("key", module.getKey());
-                // "Hide" is written by the property loop below; only the legacy key is read on load.
-
+                
                 ArrayList<Property<?>> list = Astor.propertyManager.properties.get(module.getClass());
                 if (list != null) {
                     for (Property<?> property : list) {

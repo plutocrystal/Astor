@@ -42,13 +42,7 @@ public class Velocity extends Module {
     private int jumpCooldown = 0;
 
     public final ModeProperty mode = new ModeProperty("Mode", 0, new String[]{"Vanilla", "Jump", "Delay", "Reverse", "LegitTest"});
-    /**
-     * Milliseconds to hold the reversal delay before letting the flag go.
-     *
-     * <p>{@code DelayManager} counts the ticks it has been delaying, so that side is multiplied by 50
-     * where it is compared rather than dividing this value, which keeps the two comparisons exact at
-     * any millisecond setting.</p>
-     */
+    
     public final IntProperty delayTicks = new IntProperty("DelayTicks", 150, 50, 1000, () -> this.mode.getValue() == 2);
     public final PercentProperty delayChance = new PercentProperty("DelayChance", 100, () -> this.mode.getValue() == 2);
     public final PercentProperty chance = new PercentProperty("Chance", 100);

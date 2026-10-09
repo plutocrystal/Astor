@@ -27,13 +27,6 @@ public abstract class MixinLayerArmorBase {
         }
     }
 
-    /**
-     * Drops armour entirely while a custom model is drawn in place of the biped.
-     *
-     * <p>None of the three shapes has an armour layer, so the vanilla chest/legs/feet/head plates would
-     * hang off geometry that is not there. Cancelling at the layer's entry point also covers the glint
-     * pass, which reads the same model boxes. Upstream injects at the same point for the same reason.</p>
-     */
     @Inject(
             method = {"doRenderLayer"},
             at = {@At("HEAD")},

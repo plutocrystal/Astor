@@ -120,13 +120,13 @@ public class BedTracker extends Module {
         this.alertRange = new IntProperty("AlertsRange", 48, 8, 128, this.alerts::getValue);
         this.alertOnPearl = new BooleanProperty("AlertsOnPearl", true);
         this.alertSound = new ModeProperty("AlertsSound", 1, new String[]{"None", "Meow", "Anvil"}, () -> this.alerts.getValue() || this.alertOnPearl.getValue());
-        /** Milliseconds between repeat alerts. */
+        
         this.alertFrequency = new IntProperty("AlertsFrequency", 5000, 1000, 30000, () -> this.alerts.getValue() || this.alertOnPearl.getValue());
         this.marco = new BooleanProperty("Macro", false);
         this.marcoRange = new IntProperty("MacroRange", 24, 8, 128, this.marco::getValue);
         this.marcoOnPreal = new BooleanProperty("MacroOnPearl", false);
         this.marcoText = new TextProperty("MacroText", "/lobby", () -> this.marco.getValue() || this.marcoOnPreal.getValue());
-        /** Milliseconds to wait before the chat macro fires again. */
+        
         this.marcoDelay = new IntProperty("MacroDelay", 1000, 1000, 10000, () -> this.marco.getValue() || this.marcoOnPreal.getValue());
         this.hud = new BooleanProperty("Hud", true);
         this.hudPosX = new ModeProperty("HudPositionX", 0, new String[]{"Left", "Middle", "Right"}, this.hud::getValue);
@@ -165,8 +165,7 @@ public class BedTracker extends Module {
                     .filter(entity -> entity instanceof EntityPlayer)
                     .map(entity -> (EntityPlayer) entity)
                     .filter(entityPlayer -> !this.whitelistedPlayers.contains(entityPlayer.getName()))
-                    // Friends and teammates are not raiding us, so they must not raise the bed alarm
-                    // or trigger the macro.
+                    
                     .filter(entityPlayer -> !Target.get().isFriendOrTeammate(entityPlayer))
                     .collect(Collectors.toList())) {
                 double distance = player.getDistance((double) this.bedPos.getX() + 0.5, (double) this.bedPos.getY() + 0.5, (double) this.bedPos.getZ() + 0.5);
@@ -346,3 +345,4 @@ public class BedTracker extends Module {
         this.bedPos = null;
     }
 }
+

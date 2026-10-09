@@ -23,8 +23,7 @@ public class CategoryComponent {
     public int yy;
     private double marginY, marginX;
     private int height = 0;
-    // Vertical offset of the whole gui, pushed in by the screen every frame. Kept separate from `y`
-    // so that `y` stays the unscolled position - that is what gets persisted to the config.
+    
     private int scrollOffset = 0;
 
     public CategoryComponent(String category, List<Module> modules) {
@@ -117,17 +116,10 @@ public class CategoryComponent {
         return this.x;
     }
 
-    /**
-     * On-screen Y, already reduced by the whole-gui scroll. Every child component positions itself
-     * from this, so scrolling the gui is just a matter of moving this value.
-     */
     public int getY() {
         return this.y - this.scrollOffset;
     }
 
-    /**
-     * Y without any scroll applied. This is the position that belongs in the config.
-     */
     public int getUnscolledY() {
         return this.y;
     }
@@ -139,8 +131,7 @@ public class CategoryComponent {
     public void handleDrag(int x, int y) {
         if (this.dragging) {
             this.setX(x - this.xx);
-            // yy is captured in screen space, so the offset has to go back on to keep the header
-            // under the cursor once the whole gui is scrolled.
+            
             this.setY(y - this.yy + this.scrollOffset);
         }
     }

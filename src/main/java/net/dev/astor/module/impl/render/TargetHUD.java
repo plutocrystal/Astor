@@ -67,8 +67,7 @@ public class TargetHUD extends Module {
         if (killAura.isEnabled() && killAura.isAttackAllowed() && TeamUtil.isEntityLoaded(killAura.getTarget())) {
             return killAura.getTarget();
         } else if (!(Boolean) this.kaOnly.getValue()
-                // A packet can carry an attack on a friend or teammate, and the last-target fallback
-                // outlives the entity leaving the world, so re-check before showing it.
+                
                 && Target.get().isValidTarget(this.lastTarget)
                 && !this.lastAttackTimer.hasTimeElapsed(1500L)
                 && TeamUtil.isEntityLoaded(this.lastTarget)) {
@@ -237,3 +236,4 @@ public class TargetHUD extends Module {
         }
     }
 }
+

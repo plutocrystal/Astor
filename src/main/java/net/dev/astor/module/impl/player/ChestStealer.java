@@ -31,18 +31,10 @@ public class ChestStealer extends Module {
     private boolean inChest = false;
     private boolean warnedFull = false;
 
-    /**
-     * Milliseconds between slot clicks.
-     *
-     * <p>{@link #clickDelay} is a tick counter, so the value is divided by 50 where it is rolled into
-     * it. Anything under 50ms floors to zero ticks - the counter cannot store it.</p>
-     */
     public final IntProperty minDelay = new IntProperty("MinDelay", 50, 0, 1000);
 
-    /** Milliseconds. See {@link #minDelay}. */
     public final IntProperty maxDelay = new IntProperty("MaxDelay", 100, 0, 1000);
 
-    /** Milliseconds before the chest is treated as open. See {@link #minDelay}. */
     public final IntProperty openDelay = new IntProperty("OpenDelay", 50, 0, 1000);
     public final BooleanProperty autoClose = new BooleanProperty("AutoClose", false);
     public final BooleanProperty nameCheck = new BooleanProperty("NameCheck", true);
@@ -282,3 +274,4 @@ public class ChestStealer extends Module {
         }
     }
 }
+

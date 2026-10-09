@@ -7,11 +7,6 @@ import org.lwjgl.opengl.GL11;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * Renders {@code Module#hide} on the left of the bind row instead of as a normal settings row, so
- * that the toggle and the key bind sit side by side. Right half of the row belongs to
- * {@link BindComponent}.
- */
 public class HideComponent implements Component {
     private final ModuleComponent parentModule;
     private int offsetY;
@@ -30,7 +25,7 @@ public class HideComponent implements Component {
         GL11.glScaled(0.5D, 0.5D, 0.5D);
         Minecraft mc = Minecraft.getMinecraft();
         String text = "Hide: " + ChatColors.formatColor(this.parentModule.mod.hide.formatValue());
-        // Right aligned with the same 4px padding BindComponent uses on the left.
+        
         float right = (float) (this.parentModule.category.getX() + this.parentModule.category.getWidth() - 4) * 2.0F;
         mc.fontRendererObj.drawString(text, right - mc.fontRendererObj.getStringWidth(text),
                 (float) (this.parentModule.category.getY() + this.offsetY + 5) * 2.0F,
@@ -78,11 +73,6 @@ public class HideComponent implements Component {
         return true;
     }
 
-    /**
-     * Right half of the row only. {@link BindComponent} owns the left half, and the two must not
-     * overlap because {@link ModuleComponent#mouseDown} walks the settings back to front and stops
-     * at the first hit.
-     */
     public boolean isHovered(int x, int y) {
         int mid = this.x + this.parentModule.category.getWidth() / 2;
         return x >= mid && x < this.x + this.parentModule.category.getWidth() && y > this.y && y < this.y + 12;

@@ -29,19 +29,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Replaces the skin on the local player, or on everyone when {@code AllPlayers} is on.
- *
- * <p>Skins come from two places: the ones shipped in the jar under {@code assets/astor/texture/skin},
- * and any dropped into the folder {@link #getCustomFolder()} points at. Both are read into the mode
- * list when the module is created, and {@code Load Skins} reads them again so a skin added while the
- * client was running can be picked up without a restart.</p>
- *
- * <p>Every skin is decoded into a {@link DynamicTexture} up front rather than being handed to the
- * renderer as a {@link ResourceLocation} to resolve per frame. {@code getLocationSkin} is called on
- * every render of every player, so anything that touches the disk there would be doing it sixty times
- * a second per entity.</p>
- */
 public class CustomSkin extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
     private static final String SKIN_FOLDER = "assets/astor/texture/skin";
@@ -84,13 +71,6 @@ public class CustomSkin extends Module {
         }
     }
 
-    /**
-     * Rebuilds the skin list, replacing the textures the previous run left registered.
-     *
-     * <p>The dynamic textures have to be released explicitly: they were handed out under generated
-     * locations and nothing else holds a reference, so they would otherwise stay resident until the
-     * client closed and eat into the texture budget for skins that are no longer selected.</p>
-     */
     public void loadSkins() {
         for (ResourceLocation texture : this.textures.values()) {
             mc.renderEngine.deleteTexture(texture);
@@ -112,8 +92,7 @@ public class CustomSkin extends Module {
         taken.add(NONE.toLowerCase(Locale.ROOT));
         int skipped = 0;
         for (String name : found) {
-            // A skin of the same name can arrive from both places, and the mode list is addressed by
-            // name, so only the first of each survives.
+            
             if (!taken.add(name.toLowerCase(Locale.ROOT))) {
                 skipped++;
                 continue;
@@ -170,10 +149,6 @@ public class CustomSkin extends Module {
         return name.substring(0, name.length() - SKIN_EXTENSION.length());
     }
 
-    /**
-     * The bundled copy wins over the external one, so a broken drop-in file cannot make a skin that
-     * ships with the client stop working.
-     */
     private BufferedImage readSkin(String name, File folder) {
         InputStream assets = ResourceUtil.open(SKIN_FOLDER + "/" + name + SKIN_EXTENSION);
         if (assets != null) {
@@ -201,9 +176,6 @@ public class CustomSkin extends Module {
         ChatUtil.sendFormatted("&c" + message);
     }
 
-    /**
-     * @return the texture for the selected skin, or null when None is selected or nothing is loaded
-     */
     public ResourceLocation resolveSkin() {
         int index = this.skin.getValue();
         if (index <= 0 || index >= this.names.size()) {
@@ -212,7 +184,6 @@ public class CustomSkin extends Module {
         return this.textures.get(this.names.get(index));
     }
 
-    /** Whether the selected skin should replace this player's own. */
     public boolean shouldApply(AbstractClientPlayer player) {
         if (this.skin.getValue() <= 0) {
             return false;
@@ -223,7 +194,6 @@ public class CustomSkin extends Module {
         return player == mc.thePlayer;
     }
 
-    /** The model the skin is laid out for, which is not derivable from the texture itself. */
     public String getSkinType() {
         return this.model.getValue() == 1 ? "slim" : "default";
     }
@@ -234,3 +204,4 @@ public class CustomSkin extends Module {
         return selected.isEmpty() || selected.equals(NONE) ? new String[0] : new String[]{selected};
     }
 }
+

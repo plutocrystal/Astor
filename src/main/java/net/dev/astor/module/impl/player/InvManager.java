@@ -27,22 +27,14 @@ public class InvManager extends Module {
     private int oDelay = 0;
     private boolean inventoryOpen = false;
     private final TimerUtil autoArmorTime = new TimerUtil();
-    /**
-     * Milliseconds between inventory actions.
-     *
-     * <p>{@link #actionDelay} is a tick counter, so the value is divided by 50 where it is rolled
-     * into it. Anything under 50ms floors to zero ticks - the counter cannot store it.</p>
-     */
+    
     public final IntProperty minDelay = new IntProperty("MinDelay", 50, 0, 1000);
 
-    /** Milliseconds. See {@link #minDelay}. */
     public final IntProperty maxDelay = new IntProperty("MaxDelay", 100, 0, 1000);
 
-    /** Milliseconds before the inventory is treated as open. See {@link #minDelay}. */
     public final IntProperty openDelay = new IntProperty("OpenDelay", 50, 0, 1000);
     public final BooleanProperty autoArmor = new BooleanProperty("AutoArmor", true);
 
-    /** Milliseconds between automatic armour re-equips. */
     public final IntProperty autoArmorInterval = new IntProperty("AutoArmorInterval", 0, 0, 5000, this.autoArmor::getValue);
     public final BooleanProperty dropTrash = new BooleanProperty("DropTrash", false);
     public final BooleanProperty checkDurability = new BooleanProperty("CheckDurability", true);
@@ -288,3 +280,4 @@ public class InvManager extends Module {
         }
     }
 }
+

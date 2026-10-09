@@ -28,8 +28,7 @@ public class Chams extends Module {
             }
             return this.self.getValue() && mc.gameSettings.thirdPersonView != 0;
         }
-        // Which kinds of mob are worth drawing is the Target module's call, so chams never show an
-        // entity the combat modules would refuse to act on.
+        
         return !entityLivingBase.isInvisible() && Target.get().isTargetable(entityLivingBase);
     }
 
@@ -59,3 +58,4 @@ public class Chams extends Module {
         }
     }
 }
+

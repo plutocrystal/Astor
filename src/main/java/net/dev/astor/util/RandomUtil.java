@@ -65,10 +65,9 @@ public final class RandomUtil {
 
     public static long nextRaw64() { return LOCAL.get().next64(); }
 
-    /** Box-Muller normal deviate scaled by sigma. */
     public static double randomGaussian(double sigma) {
         double u1 = nextDouble();
-        // nextDouble() can return 0.0, and log(0) is -Infinity, which would poison the result.
+        
         if (u1 <= 0.0) {
             u1 = Double.MIN_NORMAL;
         }
@@ -76,11 +75,6 @@ public final class RandomUtil {
         return Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2) * sigma;
     }
 
-    /**
-     * Gaussian draw confined to [min, max], mean at the midpoint and sigma at a quarter of the width so
-     * nearly every sample lands inside the range. Gives up after ten attempts and returns the mean, which
-     * is what keeps a narrow range (min == max) from spinning.
-     */
     public static double randomGaussianInRange(double min, double max, boolean round) {
         if (min > max) {
             throw new IllegalArgumentException("min > max");

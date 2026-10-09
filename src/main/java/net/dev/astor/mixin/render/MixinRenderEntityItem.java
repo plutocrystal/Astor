@@ -30,13 +30,10 @@ import java.util.Random;
 
 @SideOnly(Side.CLIENT)
 @Mixin(value = {RenderEntityItem.class}, priority = 9999)
-// Forge deprecates ItemCameraTransforms/IBakedModel#getItemCameraTransforms(), but 1.8.9 offers no
-// non-deprecated way to read the GROUND transform (needed for the item spacing/offset maths below),
-// so those deprecated calls are unavoidable here.
+
 @SuppressWarnings("deprecation")
 public abstract class MixinRenderEntityItem extends MixinRender {
-    // Written out in full rather than imported: javac reports a deprecation warning on the import
-    // itself (once per annotation-processing round) and import warnings cannot be suppressed.
+    
     private static final net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType GROUND =
             net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType.GROUND;
 
@@ -208,9 +205,7 @@ public abstract class MixinRenderEntityItem extends MixinRender {
         GlStateManager.rotate(this.renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
         GlStateManager.scale(-0.02F, -0.02F, 0.02F);
         GlStateManager.translate(-8.0F, 0.0F, 0.0F);
-        // Mirror RenderItem#renderItemOverlayIntoGUI, the only stack-count text path vanilla 1.8.9
-        // actually has (the gui one - it draws no world-space count at all). disableDepth is what
-        // lets the label survive the item geometry that was just drawn in front of it.
+        
         GlStateManager.disableLighting();
         GlStateManager.disableDepth();
         if (drawDurability) {

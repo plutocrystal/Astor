@@ -3,13 +3,6 @@ package net.dev.astor.module.impl.combat.killaura.target;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.AxisAlignedBB;
 
-/**
- * A snapshot of one target: the entity plus the box and position it had when it was picked.
- *
- * <p>The position is copied rather than read live because the dot has to keep aiming at where the
- * target was when the rotation was computed, not at where it has since moved to - the rotation is
- * only recomputed once a tick while the entity moves every tick.</p>
- */
 public class AttackData {
     private final EntityLivingBase entity;
     private final AxisAlignedBB box;
@@ -46,3 +39,4 @@ public class AttackData {
         return this.z;
     }
 }
+

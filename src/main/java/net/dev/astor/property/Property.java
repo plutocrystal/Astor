@@ -20,7 +20,7 @@ public abstract class Property<T> {
 
     protected Property(String name, Object value, Predicate<T> predicate, BooleanSupplier visibleChecker) {
         this.name = name;
-        // The concrete subclass fixes T, so these casts are safe at every use site.
+        
         this.type = Property.cast(value);
         this.validator = predicate;
         this.visibleChecker = visibleChecker;

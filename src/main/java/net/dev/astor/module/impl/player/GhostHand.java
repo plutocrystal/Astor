@@ -20,14 +20,10 @@ public class GhostHand extends Module {
         super("GhostHand", Category.PLAYER, false);
     }
 
-    /**
-     * Whether the entity should be taken out of the list of things the camera ray can hit, so the
-     * player can click straight through it. Target owns the friend and teammate check, so this
-     * module can never be talked into handing items to one.
-     */
     public boolean shouldSkip(Entity entity) {
         return entity instanceof EntityLivingBase
                 && (Target.get().isFriendOrTeammate((EntityLivingBase) entity)
                 || !this.ignoreWeapons.getValue() || !ItemUtil.hasRawUnbreakingEnchant());
     }
 }
+

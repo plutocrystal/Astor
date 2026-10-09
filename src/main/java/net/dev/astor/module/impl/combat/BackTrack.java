@@ -40,15 +40,6 @@ import java.awt.*;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-/**
- * Ported from the RN_Random_Name "BackTrackB" script (LiquidBounce based). Holds the movement stream back
- * so the target keeps moving past its server-side distance, then releases packets one at a time until the
- * server-side distance comes back inside the hit window - which makes the server accept a hit that the
- * client view says was out of reach.
- *
- * <p>Both directions share one queue, exactly like the original: outgoing movement packets are held back
- * while incoming position packets are also withheld, since releasing the wrong half would undo the effect.</p>
- */
 public class BackTrack extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
     private static final int MAX_BUFFERED_PACKETS = 1024;
@@ -108,8 +99,6 @@ public class BackTrack extends Module {
         super("BackTrack", Category.COMBAT, false);
     }
 
-    // ------------------------------------------------------------------ lifecycle
-
     @Override
     public void onEnabled() {
         this.blockingPacket = false;
@@ -144,8 +133,6 @@ public class BackTrack extends Module {
         this.target = null;
     }
 
-    // ------------------------------------------------------------------ tick
-
     @EventTarget
     public void onTick(TickEvent event) {
         if (!this.isEnabled() || event.getType() != EventType.PRE) {
@@ -156,7 +143,7 @@ public class BackTrack extends Module {
             this.queue.clear();
             return;
         }
-        // Both this and LagRange hold C03 back; two queues in series would double the lag.
+        
         if (this.isConflict(LagRange.class)) {
             this.backtracking = false;
             this.releaseAllPackets();
@@ -215,8 +202,6 @@ public class BackTrack extends Module {
         this.lastRenderY = this.smoothY;
         this.lastRenderZ = this.smoothZ;
 
-        // range has to exist before the onlyWhenNeed test reads it. The original assigned it inside
-        // releasePacketToDistance, which runs after this test, so the first ticks compared against 0.
         this.range = this.rollRange();
 
         boolean inWindow = this.currentDistance > this.minHitRange.getValue()
@@ -251,8 +236,6 @@ public class BackTrack extends Module {
         return RandomUtil.randomGaussianInRange(this.minDelay.getValue(), this.maxDelay.getValue(), true);
     }
 
-    // ------------------------------------------------------------------ packets
-
     @EventTarget
     public void onPacket(PacketEvent event) {
         if (!this.isEnabled() || mc.theWorld == null || this.target == null) {
@@ -267,7 +250,6 @@ public class BackTrack extends Module {
         }
     }
 
-    /** Keeps realX/Y/Z in step with what the server last told us about the target. */
     private void trackServerPosition(Packet<?> packet) {
         if (packet instanceof S14PacketEntity) {
             S14PacketEntity s14 = (S14PacketEntity) packet;
@@ -316,10 +298,6 @@ public class BackTrack extends Module {
                 || packet instanceof S08PacketPlayerPosLook;
     }
 
-    /**
-     * Releases from the head of the queue until the distance the server would compute is inside the hit
-     * window again, or the oldest buffered packet has waited longer than the rolled range.
-     */
     private void releasePacketToDistance() {
         if (this.queue.isEmpty()) {
             this.blockingPacket = true;
@@ -396,12 +374,6 @@ public class BackTrack extends Module {
         this.blockingPacket = false;
     }
 
-    /**
-     * Puts one queued packet back on the wire. Clientbound packets go through processPacket, matching what
-     * the original did by calling each handleXxx method by hand, minus the risk of that dispatch chain
-     * drifting out of sync with the packet list. handleS08/S12/S27 decide whether the packet is applied
-     * at all or simply dropped.
-     */
     private void deliver(QueuedPacket queued) {
         Packet<?> packet = queued.packet;
         if (queued.type == EventType.SEND) {
@@ -422,17 +394,10 @@ public class BackTrack extends Module {
 
     @SuppressWarnings("unchecked")
     private void processClientbound(Packet<?> packet) {
-        // Clientbound packets are always processed by INetHandlerPlayClient, so the cast is safe.
+        
         ((Packet<net.minecraft.network.play.INetHandlerPlayClient>) packet).processPacket(mc.getNetHandler());
     }
 
-    // ------------------------------------------------------------------ helpers
-
-    /**
-     * The target's own box translated to a new position. The incoming box has already been expanded by
-     * the collision border, so the half extents have that border taken back off, otherwise the rebuilt box
-     * comes out taller than the entity.
-     */
     private AxisAlignedBB boxAt(AxisAlignedBB box, double x, double y, double z, float size) {
         double halfWidth = (box.maxX - box.minX) / 2.0 - size;
         double height = box.maxY - box.minY - 2.0 * size;
@@ -482,8 +447,6 @@ public class BackTrack extends Module {
         return m != null && m.isEnabled();
     }
 
-    // ------------------------------------------------------------------ render
-
     @EventTarget
     public void onRender3D(Render3DEvent event) {
         if (!this.isEnabled() || mc.theWorld == null || this.target == null) {
@@ -530,3 +493,4 @@ public class BackTrack extends Module {
         }
     }
 }
+

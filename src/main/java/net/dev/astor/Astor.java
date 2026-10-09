@@ -74,8 +74,7 @@ public class Astor {
         commandManager.commands.add(new ToggleCommand());
         commandManager.commands.add(new VclipCommand());
         for (Module module : moduleManager.modules.values()) {
-            // Walk the hierarchy from the base class down so Module's own properties (Hide) are
-            // registered first and end up at the top of the module's row in the click gui.
+            
             ArrayList<Class<?>> hierarchy = new ArrayList<>();
             for (Class<?> type = module.getClass(); type != null && type != Object.class; type = type.getSuperclass()) {
                 hierarchy.add(type);

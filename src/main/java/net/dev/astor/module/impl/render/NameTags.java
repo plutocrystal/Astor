@@ -69,8 +69,7 @@ public class NameTags extends Module {
             }
             return this.self.getValue() && mc.gameSettings.thirdPersonView != 0;
         }
-        // Which kinds of mob get a tag is the Target module's call, so a nametag never floats over
-        // an entity the combat modules would refuse to act on.
+        
         return !entityLivingBase.isInvisible() && Target.get().isTargetable(entityLivingBase);
     }
 
@@ -219,3 +218,4 @@ public class NameTags extends Module {
         }
     }
 }
+

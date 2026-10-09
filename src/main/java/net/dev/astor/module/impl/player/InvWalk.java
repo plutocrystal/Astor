@@ -53,10 +53,9 @@ public class InvWalk extends Module {
 
     public final ModeProperty mode = new ModeProperty("Mode", 1, new String[]{"Vanilla", "Legit", "Hypixel", "Legit+"});
     public final BooleanProperty guiEnabled = new BooleanProperty("ClickGui", true);
-    /** Milliseconds to wait before the queued open is sent. See {@link #openDelayTicks}. */
+    
     public final IntProperty openDelay = new IntProperty("OpenDelay", 0, 0, 1000, () -> mode.getValue() == 3);
 
-    /** Milliseconds to wait before the queued close is sent. See {@link #openDelayTicks}. */
     public final IntProperty closeDelay = new IntProperty("CloseDelay", 200, 0, 1000, () -> mode.getValue() == 3);
     public final BooleanProperty lockMoveKey = new BooleanProperty("LockMoveDey", false);
 
@@ -309,3 +308,4 @@ public class InvWalk extends Module {
         return new String[]{this.mode.getModeString()};
     }
 }
+

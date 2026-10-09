@@ -198,11 +198,7 @@ public class PlayerUtil {
                             target.motionY = originalMotionY;
                             target.motionZ = originalMotionZ;
                         }
-                        // Same two loops MixinEntityPlayer runs on the vanilla path, with the same guards.
-                        // They live here rather than only in that mixin because this method is a second,
-                        // hand-written copy of EntityPlayer.attackTargetEntityWithCurrentItem and the
-                        // redirect never sees it - KillAura and AntiFireball attack through here, so
-                        // without it the module did nothing at all whenever either was on.
+                        
                         for (int i = 0; i < Particles.getCriticalsMultiplier(isCritical); i++) {
                             mc.thePlayer.onCriticalHit(target);
                         }

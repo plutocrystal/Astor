@@ -20,18 +20,6 @@ import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
-/**
- * Replaces the window title and the window/taskbar icons with the client's own.
- *
- * <p>Both vanilla call sites sit inside startGame() before {@code new Astor()} runs at its RETURN, so
- * {@link Astor#version} is still null at this point and the version has to be read from version.json
- * directly rather than off the Astor instance.</p>
- *
- * <p>Windows keeps three icon slots on the one window handle - ICON_SMALL (16x16, used by the taskbar
- * button and alt-tab), ICON_BIG (32x32, the title bar) and ICON_BIG2 (48x48, high DPI) - and LWJGL
- * picks the slot from each image's dimensions. The client's two sources are fed in at the sizes that
- * land them where they belong: the taskbar wants AstraWindows.png, the title bar wants Astra.png.</p>
- */
 @SideOnly(Side.CLIENT)
 @Mixin(value = {Minecraft.class}, priority = 9999)
 public abstract class MixinMinecraftWindow {
@@ -60,24 +48,17 @@ public abstract class MixinMinecraftWindow {
     private void setWindowIcon(CallbackInfo callbackInfo) {
         ByteBuffer[] icons = buildIcons();
         if (icons == null) {
-            // Anything went wrong reading or scaling the art, so leave the display alone rather than
-            // cancel: vanilla will still install its own icons and the game still opens.
+            
             return;
         }
         try {
             Display.setIcon(icons);
             callbackInfo.cancel();
         } catch (Throwable ignored) {
-            // Same reasoning: a display that rejects the icon set should still start.
+            
         }
     }
 
-    /**
-     * Ascending sizes, matching vanilla's own ordering: the 16x16 entry lands in ICON_SMALL, which is
-     * what the taskbar button and alt-tab draw, and the 32x32 entry lands in ICON_BIG, the title bar.
-     * Returns null unless both came out of a real image, since a partially built set would leave one
-     * slot stale.
-     */
     private static ByteBuffer[] buildIcons() {
         BufferedImage taskbar = scale(load(TASKBAR_ICON), TASKBAR_SIZE);
         BufferedImage titleBar = scale(load(WINDOW_ICON), TITLE_BAR_SIZE);
@@ -95,17 +76,6 @@ public abstract class MixinMinecraftWindow {
         }
     }
 
-    /**
-     * Centre-crops to a square, then box-filters it down to the requested size. The taskbar art is
-     * 500x550, and scaling that straight to 16x16 would squash it, so the middle square is taken first.
-     *
-     * <p>The resize is done pixel by pixel rather than through
-     * {@code Graphics2D.drawImage(int,int,int,int,int,int,int,int)}. That overload drops the alpha
-     * channel outright here - a 64x64 source with 2433 opaque pixels came out with none - and a
-     * Graphics2D path is not something that can be verified on a headless box. Averaging the whole
-     * source box that maps to each destination pixel also keeps a 500x500 logo from aliasing into
-     * nothing at 16x16 the way nearest-neighbour sampling would.</p>
-     */
     private static BufferedImage scale(BufferedImage source, int size) {
         if (source == null) {
             return null;
@@ -126,11 +96,6 @@ public abstract class MixinMinecraftWindow {
         return target;
     }
 
-    /**
-     * Area average over one destination pixel's worth of source. Colour is weighted by alpha and the
-     * alpha itself is averaged separately, otherwise fully transparent pixels - which still carry
-     * whatever RGB was left in the file - bleed their colour into the edges and halo the result.
-     */
     private static int average(BufferedImage source, int fromX, int fromY, int toX, int toY) {
         long alphaSum = 0L;
         long redSum = 0L;
@@ -158,11 +123,6 @@ public abstract class MixinMinecraftWindow {
         return alphaOut << 24 | redOut << 16 | greenOut << 8 | blueOut;
     }
 
-    /**
-     * Same packing as Minecraft.readImageToBuffer: getRGB hands back 0xAARRGGBB and the expression
-     * rotates it into 0xRRGGBBAA, which a big-endian putInt lays down as R,G,B,A - the order LWJGL's
-     * CreateIcon expects.
-     */
     private static ByteBuffer toBuffer(BufferedImage image) {
         int width = image.getWidth();
         int height = image.getHeight();

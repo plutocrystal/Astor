@@ -31,10 +31,7 @@ public class BreakProgress extends Module {
     private static final int PERCENTAGE = 0;
     private static final int SECOND = 1;
     private static final double TEXT_SCALE = 0.02266667D;
-    /**
-     * 剩余 tick 数换算成显示用的秒数。原版这里是 20.0（tick/秒），数值偏大，
-     * 除以 10 之后才对应真实世界时间（例如 35 -> 3.5）。
-     */
+    
     private static final double TICKS_PER_SECOND = 10.0D;
 
     public final ModeProperty mode = new ModeProperty("Mode", 0, MODES);
@@ -71,10 +68,6 @@ public class BreakProgress extends Module {
         this.progressStr = "";
     }
 
-    /**
-     * 每 tick 的挖掘进度，移植自 keystrokesmod 的 BlockUtils.getBlockHardness。
-     * 返回 0 表示这个方块挖不动（硬度为负，例如基岩）。
-     */
     private float getBreakSpeed() {
         Block block = BreakProgress.getBlock(this.block);
         float hardness = block.getBlockHardness(mc.theWorld, this.block);
@@ -205,3 +198,4 @@ public class BreakProgress extends Module {
         this.resetVariables();
     }
 }
+

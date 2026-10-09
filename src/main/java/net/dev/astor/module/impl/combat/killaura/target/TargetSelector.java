@@ -23,11 +23,6 @@ import net.minecraft.world.WorldSettings.GameType;
 
 import java.util.ArrayList;
 
-/**
- * Finding and keeping a target: which entities count, how far away they may be, and which one of
- * them is picked. The four range tests stay separate because they measure different things - how far
- * you can hit, how far you swing early, how far you can block, and how far the aim reaches.
- */
 public class TargetSelector {
     private static final Minecraft mc = Minecraft.getMinecraft();
 
@@ -37,7 +32,6 @@ public class TargetSelector {
         this.owner = owner;
     }
 
-    /** Whether an attack is allowed at all right now, ignoring whether a target exists. */
     public boolean canAttack() {
         if (this.owner.inventoryCheck.getValue() && mc.currentScreen instanceof GuiContainer) {
             return false;
@@ -88,7 +82,7 @@ public class TargetSelector {
         if (!Target.get().isValidTarget(entityLivingBase)) {
             return false;
         }
-        // Range, fov and line of sight stay with this module, Target does not decide them.
+        
         return RotationUtil.angleToEntity(entityLivingBase) <= this.owner.fov.getValue().floatValue()
                 && (this.owner.throughWalls.getValue() || RotationUtil.rayTrace(entityLivingBase) == null);
     }
@@ -97,11 +91,6 @@ public class TargetSelector {
         return this.isInBlockRange(entityLivingBase) || this.isInSwingRange(entityLivingBase) || this.isInAttackRange(entityLivingBase);
     }
 
-    /**
-     * How far away KillAura is willing to aim at a target. This is an independent setting: it is not
-     * linked to AttackRange / SwingRange / AutoBlockRange, because each of those measures something
-     * different - how far you can hit, how far you swing early, and how far you can block.
-     */
     public boolean isInAimRange(EntityLivingBase entityLivingBase) {
         return RotationUtil.distanceToEntity(entityLivingBase) <= (double) this.owner.aimRange.getValue();
     }
@@ -154,11 +143,6 @@ public class TargetSelector {
         );
     }
 
-    /**
-     * Which index into the sorted list to take. Switch mode advances on every registered hit and
-     * wraps at the end of the list, so it only ever cycles through targets that all passed the
-     * filters above.
-     */
     public int pickTarget(ArrayList<EntityLivingBase> targets, boolean hitRegistered) {
         if (this.owner.mode.getValue() == 1 && hitRegistered) {
             this.owner.consumeHit();
@@ -170,11 +154,6 @@ public class TargetSelector {
         return this.owner.getSwitchTick();
     }
 
-    /**
-     * Every entity that could be attacked right now, narrowed to the tightest range that still has
-     * a candidate, then sorted. The narrowing is what makes a distant entity not win just by being
-     * the only one left.
-     */
     public ArrayList<EntityLivingBase> collectTargets() {
         ArrayList<EntityLivingBase> targets = new ArrayList<>();
         for (Entity entity : mc.theWorld.loadedEntityList) {
@@ -201,7 +180,6 @@ public class TargetSelector {
         return targets;
     }
 
-    /** Whether the current target has to be dropped and looked for again. */
     public boolean needsRetarget(AttackData current) {
         return current == null
                 || !this.isValidTarget(current.getEntity())
@@ -214,3 +192,4 @@ public class TargetSelector {
         return mc.playerController.getCurrentGameType() == GameType.SPECTATOR;
     }
 }
+

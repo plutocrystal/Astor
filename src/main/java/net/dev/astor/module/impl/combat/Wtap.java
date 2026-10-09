@@ -21,15 +21,9 @@ public class Wtap extends Module {
     private boolean stopForward = false;
     private long delayTicks = 0L;
     private long durationTicks = 0L;
-    /**
-     * Milliseconds to hold the sprint before the forward tap starts.
-     *
-     * <p>{@link #delayTicks} is drained 50 per tick, so it counts milliseconds despite the name; the
-     * value is added to it directly and the decrement does the tick conversion.</p>
-     */
+    
     public final FloatProperty delay = new FloatProperty("Delay", 275.0F, 0.0F, 500.0F, 0);
 
-    /** Milliseconds the tap is held, added to {@link #durationTicks} the same way. */
     public final FloatProperty duration = new FloatProperty("Duration", 75.0F, 50.0F, 250.0F, 0);
 
     private boolean canTrigger() {
@@ -91,3 +85,4 @@ public class Wtap extends Module {
         }
     }
 }
+

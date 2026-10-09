@@ -51,7 +51,7 @@ public class TargetStrafe extends Module {
         KillAura killAura = (KillAura) Astor.moduleManager.modules.get(KillAura.class);
         if (killAura.isEnabled() && killAura.isAttackAllowed()) {
             EntityLivingBase entityLivingBase = killAura.getTarget();
-            // Re-check rather than trust KillAura, so the strafe never circles a friend or teammate.
+            
             return !Target.get().isValidTarget(entityLivingBase) ? null : entityLivingBase;
         } else {
             return null;

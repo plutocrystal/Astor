@@ -77,8 +77,7 @@ public class HitBox extends Module {
             );
             double closestDistance = distance;
             for (Entity entity : entities) {
-                // Never point at a friend or a teammate, otherwise the enlarged box makes the
-                // client hit someone it is supposed to leave alone.
+                
                 if (entity instanceof EntityLivingBase && !Target.get().isValidTarget((EntityLivingBase) entity)) {
                     continue;
                 }
@@ -128,8 +127,7 @@ public class HitBox extends Module {
         if (!entity.ignoreFrustumCheck && !RenderUtil.isInViewFrustum(entity.getEntityBoundingBox(), 0.1F)) {
             return false;
         }
-        // Which kinds are worth drawing is the Target module's call, so the boxes on screen always
-        // match the entities the combat modules are allowed to act on.
+        
         return Target.get().isTargetable(entity);
     }
 
@@ -182,3 +180,4 @@ public class HitBox extends Module {
         return new String[]{String.format("%.1fx", this.multiplier.getValue())};
     }
 }
+

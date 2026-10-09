@@ -88,7 +88,7 @@ public class HitSelect extends Module {
 
             EntityLivingBase living = (EntityLivingBase) target;
             if (Target.get().isFriendOrTeammate(living)) {
-                // Never hold a swing back on someone we are not meant to be hitting.
+                
                 return;
             }
             boolean allow = true;

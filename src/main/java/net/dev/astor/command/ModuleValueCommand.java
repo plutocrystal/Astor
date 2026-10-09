@@ -9,23 +9,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * ".&lt;module&gt; &lt;property&gt; &lt;value&gt;", which works without a command name because the first
- * argument is matched against the module list. Typing a bare module name is the common case, so
- * requiring ".set AutoTool Delay 3" instead would be a step nobody asked for.
- *
- * When this is registered as the "set" command it keeps that name too; handleCommand only falls back
- * to it once no real command has claimed the first argument.
- */
 public class ModuleValueCommand extends Command {
     public ModuleValueCommand() {
         super(new ArrayList<>(Arrays.asList("set")));
     }
 
-    /**
-     * Handles the ".<module> <property> <value>" form. Returns false when the first argument is not a
-     * module, so the caller can report an unknown command.
-     */
     public boolean runOnUnknownCommand(List<String> args) {
         if (args.size() < 2) {
             return false;
@@ -86,3 +74,4 @@ public class ModuleValueCommand extends Command {
     }
 
     }
+

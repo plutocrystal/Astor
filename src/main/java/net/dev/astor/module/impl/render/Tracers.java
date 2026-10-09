@@ -40,8 +40,7 @@ public class Tracers extends Module {
         if (mc.getRenderViewEntity().getDistanceToEntity(entityPlayer) > (float) this.distance.getValue()) {
             return false;
         } else if (entityPlayer != mc.thePlayer && entityPlayer != mc.getRenderViewEntity()) {
-            // Enemy list membership is what this module draws, not the Target module, so a marked
-            // enemy still gets a tracer while it is on the same team as us.
+            
             return TeamUtil.isTarget(entityPlayer) ? this.showEnemies.getValue() : this.showPlayers.getValue();
         } else {
             return false;
@@ -194,3 +193,4 @@ public class Tracers extends Module {
         }
     }
 }
+

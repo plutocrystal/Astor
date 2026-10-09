@@ -10,16 +10,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraft.network.play.server.S08PacketPlayerPosLook;
 
-/**
- * Pins the player in place: outgoing movement packets are dropped and the local position is forced
- * back to the anchor every update, so the server stops seeing you move while you keep a live
- * connection. Ported from Astra's Freeze module.
- *
- * <p>An {@code S08PacketPlayerPosLook} re-anchors the freeze point to wherever the server says you
- * are. Without that the client would keep snapping to a stale position and rubber-band, since a
- * teleport or a "moved too quickly" correction is the server's way of telling us our idea of where
- * we are no longer matches.</p>
- */
 public class Freeze extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
 
@@ -97,3 +87,4 @@ public class Freeze extends Module {
         mc.thePlayer.setPositionAndRotation(this.x, this.y, this.z, mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch);
     }
 }
+

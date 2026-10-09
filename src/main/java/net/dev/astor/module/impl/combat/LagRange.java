@@ -34,14 +34,6 @@ import java.awt.*;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-/**
- * Ported from the RN_Random_Name "LagRange" script (LiquidBounce based). Buffers outgoing movement
- * packets and trickles them back out on a millisecond schedule instead of by tick count, so the lag the
- * opponent sees varies the way a real network does rather than in fixed 50 ms steps.
- *
- * <p>This replaces the previous tick-count implementation, which drove {@code Astor.lagManager}. The
- * manager is untouched and simply stays at delay 0, which makes it a pass-through.</p>
- */
 public class LagRange extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
     private static final int MAX_BUFFERED_PACKETS = 512;
@@ -89,8 +81,6 @@ public class LagRange extends Module {
         super("LagRange", Category.COMBAT, false);
     }
 
-    // ------------------------------------------------------------------ lifecycle
-
     @Override
     public void onEnabled() {
         this.range = this.rollRange();
@@ -120,8 +110,6 @@ public class LagRange extends Module {
         this.blockingPacket = false;
     }
 
-    // ------------------------------------------------------------------ tick
-
     @EventTarget
     public void onTick(TickEvent event) {
         if (!this.isEnabled() || event.getType() != EventType.PRE) {
@@ -130,7 +118,7 @@ public class LagRange extends Module {
         if (mc.theWorld == null || mc.thePlayer == null) {
             return;
         }
-        // BackTrack holds C03 in its own queue; two buffers in series would double the lag.
+        
         if (this.isConflict(BackTrack.class)) {
             this.releaseAllPackets();
             return;
@@ -207,8 +195,6 @@ public class LagRange extends Module {
         return RandomUtil.randomGaussianInRange(this.minDelay.getValue(), this.maxDelay.getValue(), true);
     }
 
-    // ------------------------------------------------------------------ attack
-
     @EventTarget
     public void onAttack(AttackEvent event) {
         if (!this.isEnabled() || this.target == null) {
@@ -225,8 +211,6 @@ public class LagRange extends Module {
         }
     }
 
-    // ------------------------------------------------------------------ packets
-
     @EventTarget
     public void onPacket(PacketEvent event) {
         if (!this.isEnabled() || mc.theWorld == null || mc.thePlayer == null) {
@@ -239,8 +223,7 @@ public class LagRange extends Module {
             }
         }
         if (event.getType() == EventType.SEND && this.queue.isEmpty() && packet instanceof C03PacketPlayer) {
-            // Follow the position the server is being told, not the local one, so the distance maths
-            // matches what the opponent will compute.
+            
             C03PacketPlayer c03 = (C03PacketPlayer) packet;
             if (c03.getPositionX() != 0.0) {
                 this.realX = c03.getPositionX();
@@ -271,10 +254,6 @@ public class LagRange extends Module {
         event.setCancelled(true);
     }
 
-    /**
-     * Releases each buffered packet once it has waited longer than a freshly rolled delay, which is what
-     * makes the added lag jitter instead of arriving in even steps.
-     */
     private void releasePacketsByDelay() {
         if (this.queue.isEmpty()) {
             this.blockingPacket = true;
@@ -329,8 +308,6 @@ public class LagRange extends Module {
         }
     }
 
-    // ------------------------------------------------------------------ helpers
-
     private double distanceToBox(Vec3 from, AxisAlignedBB box) {
         double dx = Math.max(box.minX - from.xCoord, Math.max(0.0, from.xCoord - box.maxX));
         double dy = Math.max(box.minY - from.yCoord, Math.max(0.0, from.yCoord - box.maxY));
@@ -370,8 +347,6 @@ public class LagRange extends Module {
         Module m = Astor.moduleManager.modules.get(other);
         return m != null && m.isEnabled();
     }
-
-    // ------------------------------------------------------------------ render
 
     @EventTarget
     public void onRender3D(Render3DEvent event) {
@@ -417,3 +392,4 @@ public class LagRange extends Module {
         }
     }
 }
+

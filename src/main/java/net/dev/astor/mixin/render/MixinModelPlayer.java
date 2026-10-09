@@ -19,20 +19,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.awt.Color;
 
-/**
- * Draws NightX's three player models in place of the vanilla biped.
- *
- * <p>Ported from NightX's {@code MixinModelPlayerFix} - the file upstream calls {@code MixinModelPlayer}
- * is a different mixin entirely, on {@code RenderItem}, so the name here follows the target class.</p>
- *
- * <p>Deliberately left out of upstream's file: the Alex arm height constant and the {@code postRenderArm}
- * overwrite. Both apply whether or not the module is on, so they would change how every player is drawn
- * for reasons that have nothing to do with this.</p>
- *
- * <p>The layout is built lazily on the first render rather than in a constructor, which is what upstream
- * does and what makes the null check below meaningful: the mixin deliberately has no constructor, so the
- * fields really are null until then.</p>
- */
 @SideOnly(Side.CLIENT)
 @Mixin(value = {ModelPlayer.class}, priority = 9998)
 public abstract class MixinModelPlayer extends ModelBiped {
@@ -94,14 +80,6 @@ public abstract class MixinModelPlayer extends ModelBiped {
     private ModelRenderer handRight;
     private ModelRenderer handLeft;
 
-    /**
-     * Vanilla's pig, used by the Pig mode.
-     *
-     * <p>Held here rather than built in {@link #generatemodel()} because it is a separate ModelBase
-     * with its own texture size - the 100x80 that method puts on this model is for Freddy's sheet and
-     * would be wrong here. Left null until that mode is first picked, so a client that never uses it
-     * never builds it.</p>
-     */
     private ModelPig pig;
 
     @Inject(method = {"render"}, at = {@At("HEAD")}, cancellable = true)
@@ -145,33 +123,16 @@ public abstract class MixinModelPlayer extends ModelBiped {
         GlStateManager.popMatrix();
     }
 
-    /**
-     * Draws the vanilla pig in place of the biped.
-     *
-     * <p>Nothing is animated here: {@link net.minecraft.client.model.ModelQuadruped#render} calls its
-     * own {@code setRotationAngles}, which turns all four legs off the walk cycle and the head off the
-     * look angles. Handing it the same values the biped would have received is the whole job.</p>
-     *
-     * <p>Unscaled, and the entity's own size is left alone - it stays the 0.6 x 1.8 of a player, so the
-     * pig reads as shorter than the box it stands in. That is deliberate.</p>
-     */
     private void renderPig(Entity entity, float limbSwing, float limbSwingAmount, float ageInTicks,
                            float netHeadYaw, float headPitch, float scale) {
         if (this.pig == null) {
             this.pig = new ModelPig();
-            // ModelBase leaves isChild at true, and the one place vanilla corrects it -
-            // RendererLivingEntity.doRender setting mainModel.isChild - only ever touches the player
-            // model. Left alone, the pig renders down the child branch of ModelQuadruped.render, which
-            // halves it and shifts it down, which is a piglet rather than a grown one.
+            
             this.pig.isChild = false;
         }
         this.pig.render(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
     }
 
-    /**
-     * The imposter's colours are fixed here rather than exposed as settings, as upstream has them.
-     * Body and legs are the red and maroon of the Among Us crewmate, the visor is near-white.
-     */
     private void renderImposter(float limbSwing, float limbSwingAmount, float netHeadYaw, float headPitch, float scale) {
         final int bodyCustomColor = new Color(197, 16, 17).getRGB();
         final int eyeCustomColor = new Color(254, 254, 254).getRGB();

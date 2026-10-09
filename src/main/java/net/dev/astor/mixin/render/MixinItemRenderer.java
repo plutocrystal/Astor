@@ -28,9 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @SideOnly(Side.CLIENT)
 @Mixin(value = {ItemRenderer.class}, priority = 9999)
-// Forge deprecates ItemCameraTransforms, but renderItem's signature is fixed and 1.8.9 offers no
-// non-deprecated alternative, so that type is written out in full below instead of imported - javac
-// reports a deprecation warning on the import itself and import warnings cannot be suppressed.
+
 @SuppressWarnings("deprecation")
 public abstract class MixinItemRenderer {
     @Shadow
@@ -136,20 +134,6 @@ public abstract class MixinItemRenderer {
         }
     }
 
-    /**
-     * Vanilla's method with a cancellable hook in front of the transform.
-     *
-     * <p>The source client also replaces {@code itemToRender} with a silent-hotbar stack and zeroes the
-     * equip progress whenever that differs from the real held item. Neither is carried over: that belongs
-     * to its slot handler module, and Astor's item spoofing swaps {@code inventory.currentItem} for the
-     * whole frame instead, so there is no second stack to compare against.</p>
-     *
-     * <p>Vanilla's OptiFine guard around the whole method is dropped too, which the source client does as
-     * well; nothing in Astor references OptiFine.</p>
-     *
-     * @author xia__mc
-     * @reason for Animations module.
-     */
     @Overwrite
     public void renderItemInFirstPerson(float partialTicks) {
         float f = 1.0F - (this.prevEquippedProgress + (this.equippedProgress - this.prevEquippedProgress) * partialTicks);
@@ -159,9 +143,7 @@ public abstract class MixinItemRenderer {
         boolean active = animations != null && animations.isEnabled();
 
         if (active && animations.noEquipAnimation.getValue()) {
-            // This progress is what transformFirstPersonItem translates the hand down by, and it is
-            // what makes a swapped item climb up into place. Zeroing it before anything reads it
-            // covers the hand, the bare arm and the event alike.
+            
             f = 0.0F;
         }
 
@@ -176,12 +158,7 @@ public abstract class MixinItemRenderer {
 
         boolean leftHand = active && animations.leftHand.getValue();
         if (leftHand) {
-            // Mirrored about the plane through the camera: the hand lands on the other side of the
-            // screen and the item's own axes come out flipped, which is what a left hand looks like.
-            // Applied here and not inside the module because it still has to be in effect when
-            // renderItem runs, which is after the event has already been answered.
-            // A negative scale reverses the winding, so every front face becomes a back face and
-            // the item would be drawn inside-out; swapping the front-face winding puts them back.
+            
             GlStateManager.scale(-1.0F, 1.0F, 1.0F);
             GL11.glFrontFace(GL11.GL_CW);
         }
@@ -202,12 +179,7 @@ public abstract class MixinItemRenderer {
                 this.renderItemMap(player, f2, f, f1);
             } else if (event.isUseItem()) {
                 if (!event.isCancelled()) {
-                    // Compared rather than switched on, and the reason is specific: javac compiles a switch
-                    // over an enum into a lookup of a synthetic ItemRenderer$1.$SwitchMap$... field. That
-                    // field is compiler-generated, so it is in no mapping table, and once this body is
-                    // merged into ItemRenderer the reference resolves against the runtime jar - where the
-                    // field is obfuscated - and throws NoSuchFieldError. The EnumAction constants themselves
-                    // do map, which is what makes this form safe.
+                    
                     EnumAction action = event.getEnumAction();
                     if (action == EnumAction.NONE) {
                         this.transformFirstPersonItem(f, 0.0F);
@@ -240,3 +212,4 @@ public abstract class MixinItemRenderer {
         RenderHelper.disableStandardItemLighting();
     }
 }
+

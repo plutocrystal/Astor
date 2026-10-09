@@ -65,11 +65,11 @@ public class FullBright extends Module {
 
     @Override
     public void verifyValue(String propertyName) {
-        // Only a Mode change needs the effect torn down and re-applied. Re-applying on every
-        // property change (Hide included) makes the brightness flicker for a frame.
+        
         if (this.mode.getName().equals(propertyName) && this.isEnabled()) {
             this.onDisabled();
             this.onEnabled();
         }
     }
 }
+

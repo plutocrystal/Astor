@@ -10,7 +10,6 @@ import net.minecraft.network.play.server.S3FPacketCustomPayload;
 
 public class AntiBlind extends Module {
 
-    /** Channel the server uses to ask the client to open the book a player is holding. */
     private static final String OPEN_BOOK_CHANNEL = "MC|BOpen";
 
     public final BooleanProperty bossHealth = new BooleanProperty("BossHealth", true);
@@ -35,17 +34,6 @@ public class AntiBlind extends Module {
         return antiBlind != null && antiBlind.isEnabled() ? antiBlind : null;
     }
 
-    /**
-     * Drops the packet that pops a written book's page open.
-     *
-     * <p>The server sends {@code MC|BOpen} when a player starts reading, and vanilla answers by opening
-     * the book's page on top of the screen. Dropping the packet is what stops that, rather than
-     * cancelling the render, because the popup is opened from the packet handler.</p>
-     *
-     * <p>The enabled check is explicit here even though upstream does not need one. LiquidBounce's event
-     * manager only hands an event to a module that is on, while Astor's calls every registered handler
-     * regardless, so without it the book page would stay suppressed with the module switched off.</p>
-     */
     @EventTarget
     public void onPacket(PacketEvent event) {
         if (!this.isEnabled() || !this.bookPage.getValue() || event.isCancelled()

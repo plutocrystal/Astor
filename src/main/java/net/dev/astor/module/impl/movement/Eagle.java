@@ -22,16 +22,8 @@ public class Eagle extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
     private int sneakDelay = 0;
 
-    /**
-     * Milliseconds, held down before the next sneak release is attempted.
-     *
-     * <p>{@link #sneakDelay} is a tick counter, so the value is divided by 50 where it is rolled into
-     * it. That means anything under 50ms floors to zero ticks - the counter has no sub-tick
-     * resolution to store it in.</p>
-     */
     public final IntProperty minDelay = new IntProperty("MinDelay", 100, 0, 500);
 
-    /** Milliseconds. See {@link #minDelay}. */
     public final IntProperty maxDelay = new IntProperty("MaxDelay", 150, 0, 500);
     public final BooleanProperty directionCheck = new BooleanProperty("DirectionCheck", true);
     public final BooleanProperty jumpCheck = new BooleanProperty("JumpCheck", true);
@@ -126,3 +118,4 @@ public class Eagle extends Module {
                 : new String[]{String.format("%d-%d", this.minDelay.getValue(), this.maxDelay.getValue())};
     }
 }
+

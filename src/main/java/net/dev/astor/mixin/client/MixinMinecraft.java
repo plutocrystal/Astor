@@ -186,11 +186,6 @@ public abstract class MixinMinecraft {
         this.pumpKeyEvents();
     }
 
-    /**
-     * HEAD rather than TAIL so a speed written here is picked up by this frame's timer.updateTimer()
-     * instead of the next one. Dispatching before the tick loop is also what lets a listener run at all
-     * when a previous listener has already pinned the tick counter at zero.
-     */
     @Inject(
             method = {"runGameLoop"},
             at = {@At("HEAD")}
@@ -209,10 +204,7 @@ public abstract class MixinMinecraft {
             )
     )
     private boolean keepPerspectiveInsideBlock(EntityPlayerSP entityPlayerSP) {
-        // Vanilla reads this and, when true, runs `gameSettings.thirdPersonView = 0` - it overwrites
-        // the player's own perspective every frame the camera clips into terrain and never puts it
-        // back, so suffocating or being shoved into a wall silently forces first person for good.
-        // Always reporting "not inside a block" makes that branch never execute.
+        
         return false;
     }
 

@@ -36,11 +36,6 @@ public class TeamUtil {
         }).collect(Collectors.toList());
     }
 
-    /**
-     * Health weighted by armour, used to sort the squishiest target first. An entity with no armour
-     * scores 20 points per point of health, so the armour division has to fall back to one rather
-     * than divide by zero.
-     */
     public static float getHealthScore(EntityLivingBase entityLivingBase) {
         int armor = entityLivingBase.getTotalArmorValue();
         return entityLivingBase.getHealth() * (armor > 0 ? 20.0f / (float) armor : 20.0f);
@@ -62,11 +57,6 @@ public class TeamUtil {
         return new Color(colorCode & 0xFFFFFF | (int)(alpha * 255) << 24, true);
     }
 
-    /**
-     * @deprecated team detection now lives in the Teams module, which also covers the name colour,
-     * leather dye and GommeSW prefix hints. Use
-     * {@link net.dev.astor.module.impl.misc.Teams#get().isInYourTeam(EntityLivingBase)} instead.
-     */
     @Deprecated
     public static boolean isSameTeam(EntityPlayer player) {
         if (player == TeamUtil.mc.thePlayer) {
@@ -113,11 +103,6 @@ public class TeamUtil {
         return Astor.targetManager.isFriend(player.getName());
     }
 
-    /**
-     * Colour the friend and enemy lists paint a player with, or null when the entity is on neither
-     * list. Shared so every renderer paints the same player the same way instead of each one
-     * re-deriving the friend-then-target precedence.
-     */
     public static Color getListColor(Entity entity) {
         if (!(entity instanceof EntityPlayer)) {
             return null;

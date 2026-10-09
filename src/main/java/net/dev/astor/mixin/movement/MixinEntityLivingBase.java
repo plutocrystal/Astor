@@ -80,21 +80,6 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
         return float1;
     }
 
-    /**
-     * Animations' SwingSpeed. Vanilla hands back 6, so a swing lasts 6 ticks; the module scales that by
-     * 1 - SwingSpeed/100 instead of replacing it, which keeps the dig speed and dig slowdown potion
-     * branches vanilla computes.
-     *
-     * <p>The source client also multiplies by its timer speed here. That belongs to its timer module and
-     * is deliberately not carried over.</p>
-     *
-     * <p>Guarded on the local player, and the guard is load-bearing. getArmSwingAnimationEnd is declared
-     * on EntityLivingBase, so without it this runs for every mob in the world as well, and in an
-     * integrated server it also runs on the server thread - where Minecraft.thePlayer is not the entity
-     * being ticked and its hand stack can be null. @SideOnly does not help: that only strips this class
-     * from a dedicated server jar, while an integrated server shares the JVM with the client. Both
-     * halves are wrong on their own, so a stray mob would be swung at the player's swing speed too.</p>
-     */
     @Inject(
             method = {"getArmSwingAnimationEnd"},
             at = {@At("RETURN")},

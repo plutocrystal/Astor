@@ -14,14 +14,9 @@ import java.util.List;
 @SideOnly(Side.CLIENT)
 @Mixin(value = {GuiNewChat.class}, priority = 9999)
 public abstract class MixinGuiNewChat {
-    /** How many lines vanilla keeps before it starts deleting the oldest ones. */
+    
     private static final int VANILLA_LINE_LIMIT = 100;
 
-    /**
-     * Vanilla paints a translucent black box behind every chat line. That box is the first of the
-     * three {@code drawRect} calls in {@code drawChat}; the two later ones are the scroll bar and
-     * have to stay.
-     */
     @Redirect(
             method = {"drawChat"},
             at = @At(
@@ -38,14 +33,6 @@ public abstract class MixinGuiNewChat {
         Gui.drawRect(left, top, right, bottom, color);
     }
 
-    /**
-     * {@code setChatLine} trims the log down to {@link #VANILLA_LINE_LIMIT} lines by dropping the
-     * oldest entry while the list is still over the limit. Reporting the size as capped at the limit
-     * makes both trim loops believe the list already fits, so nothing gets dropped.
-     * <p>
-     * {@code refreshChat} rebuilds the drawn lines through this same method, so a resource reload
-     * keeps the whole history too.
-     */
     @Redirect(
             method = {"setChatLine"},
             at = @At(value = "INVOKE", target = "Ljava/util/List;size()I")
@@ -63,3 +50,4 @@ public abstract class MixinGuiNewChat {
         return size;
     }
 }
+

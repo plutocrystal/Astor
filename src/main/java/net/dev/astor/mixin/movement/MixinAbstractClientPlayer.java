@@ -37,12 +37,6 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
         }
     }
 
-    /**
-     * Hands the selected skin to the renderer in place of the player's own.
-     *
-     * <p>Returning early is what leaves vanilla in charge: this runs on every render of every player,
-     * so anything other than "a skin applies to this one" has to fall through untouched.</p>
-     */
     @Inject(method = {"getLocationSkin"}, at = @At("HEAD"), cancellable = true)
     private void getLocationSkin(CallbackInfoReturnable<ResourceLocation> callbackInfo) {
         CustomSkin customSkin = this.customSkin();
@@ -55,12 +49,6 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
         }
     }
 
-    /**
-     * The model the skin is laid out for.
-     *
-     * <p>Set together with the texture because the renderer keys its player model off this, and
-     * swapping one without the other leaves arms rendered for the wrong body.</p>
-     */
     @Inject(method = {"getSkinType"}, at = @At("HEAD"), cancellable = true)
     private void getSkinType(CallbackInfoReturnable<String> callbackInfo) {
         CustomSkin customSkin = this.customSkin();
@@ -70,7 +58,6 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
         callbackInfo.setReturnValue(customSkin.getSkinType());
     }
 
-    /** @return the module, or null before the module manager has registered it */
     private CustomSkin customSkin() {
         if (Astor.moduleManager == null) {
             return null;

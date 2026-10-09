@@ -67,12 +67,6 @@ public abstract class MixinGuiIngame {
         }
     }
 
-    /**
-     * Drops the boss health bar vanilla draws across the top of the screen.
-     *
-     * <p>Ported from LiquidBounce's AntiBlind, which cancels the same method. Vanilla only calls this
-     * while a boss bar is active, so there is nothing to check beyond the module's own switch.</p>
-     */
     @Inject(
             method = {"renderBossHealth"},
             at = {@At("HEAD")},
@@ -85,31 +79,6 @@ public abstract class MixinGuiIngame {
         }
     }
 
-    /**
-     * Applies the Scoreboard module's slider to the sidebar background.
-     *
-     * <p>{@code renderScoreboard} paints its background with three {@code Gui.drawRect} calls whose
-     * colours are hard coded into the method, and that method has no other rectangle in it - the names
-     * and the scores both go through {@code drawString}. Every rect that reaches this handler is
-     * therefore background, so one redirect covers all three without needing to tell them apart.</p>
-     *
-     * <p>The target names {@code GuiIngame} as the owner even though {@code drawRect} is declared on
-     * {@code Gui}. That is what the bytecode says: the three calls inside {@code renderScoreboard} are
-     * {@code invokestatic GuiIngame.func_73734_a}, and Mixin matches the owner literally, so naming
-     * {@code Gui} here finds nothing to redirect. MixinGuiNewChat's equivalent hook is written the same
-     * way for the same reason.</p>
-     *
-     * <p>Only the alpha byte is replaced; the red, green and blue are kept as they came in. With the
-     * module off the original colour is passed straight through, so the result is bit for bit what
-     * vanilla draws. With it on, 0% gives an alpha of zero and the blend function draws nothing at all,
-     * and 100% gives a solid black - darker than either colour vanilla uses, since vanilla runs its rows
-     * at 31% and its header at 38%, which is also why the seam between header and rows disappears
-     * somewhere before the slider reaches the top.</p>
-     *
-     * <p>Named something other than {@code drawRect} on purpose. {@code GuiIngame} inherits that static
-     * method from {@code Gui}, so an instance method of the same name and signature here would land in
-     * the target class as an attempt to override a static method, which does not compile.</p>
-     */
     @Redirect(
             method = {"renderScoreboard"},
             at = @At(

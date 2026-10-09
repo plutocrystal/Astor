@@ -15,7 +15,7 @@ public class Spammer extends Module {
     private final TimerUtil timer = new TimerUtil();
     private int charOffset = 19968;
     public final TextProperty text = new TextProperty("Text", "meow");
-    /** Milliseconds. */
+    
     public final FloatProperty delay = new FloatProperty("Delay", 3500.0F, 0.0F, 3600000.0F, 0);
     public final IntProperty random = new IntProperty("Random", 0, 0, 10);
 

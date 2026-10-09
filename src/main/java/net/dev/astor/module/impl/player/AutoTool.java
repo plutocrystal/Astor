@@ -20,17 +20,10 @@ public class AutoTool extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
     private int currentToolSlot = -1;
     private int previousSlot = -1;
-    // Render-only slot: the hotbar key the player pressed. The real slot is switched to the tool so the
-    // server counts the right tool for speed/drops, while this drives what our own screen shows.
+    
     private int spoofSlot = -1;
     private int tickDelayCounter = 0;
 
-    /**
-     * Milliseconds to wait before switching the held tool.
-     *
-     * <p>{@link #tickDelayCounter} counts ticks, so the value is divided by 50 where it is compared.
-     * Anything under 50ms floors to zero, meaning no wait at all.</p>
-     */
     public final IntProperty switchDelay = new IntProperty("Delay", 0, 0, 250);
     public final BooleanProperty switchBack = new BooleanProperty("SwitchBack", true);
     public final BooleanProperty sneakOnly = new BooleanProperty("SneakOnly", true);
@@ -45,10 +38,6 @@ public class AutoTool extends Module {
         super("AutoTool", Category.PLAYER, false);
     }
 
-    /**
-     * Render-only slot backing ItemSpoof. Deliberately not the real tool slot: {@link #currentToolSlot}
-     * is what the server sees and must stay real so mining speed and drops are correct.
-     */
     public int getSlot() {
         return this.spoofSlot;
     }
@@ -63,8 +52,7 @@ public class AutoTool extends Module {
     public boolean isKillAura() {
         KillAura killAura = (KillAura) Astor.moduleManager.modules.get(KillAura.class);
         if (!killAura.isEnabled()) return false;
-        // Re-check the target rather than trust KillAura, so the block-breaking switch never stays
-        // suppressed by a friend or teammate.
+        
         return Target.get().isValidTarget(killAura.getTarget()) && killAura.isAttackAllowed();
     }
 
@@ -106,8 +94,7 @@ public class AutoTool extends Module {
 
     @Override
     public void onEnabled() {
-        // Seed with the slot already held so an untouched AutoTool renders identically to vanilla
-        // until the player actually presses a hotbar key.
+        
         this.spoofSlot = mc.thePlayer != null ? mc.thePlayer.inventory.currentItem : -1;
     }
 
@@ -119,3 +106,4 @@ public class AutoTool extends Module {
         this.tickDelayCounter = 0;
     }
 }
+

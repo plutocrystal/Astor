@@ -43,16 +43,6 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 
-/**
- * Ported from Astra's TimerRange, which is itself the Java form of the RN_Random_Name "TimerRangeReborn"
- * script. Slows the client clock while holding outgoing movement packets back for exactly as long as
- * the target is predicted to need, so the server sees the hit land sooner than the client view suggests.
- *
- * <p>The state machine runs on {@link GameLoopEvent} rather than a tick, and that is load-bearing.
- * MinTimer defaults to 0, which pins elapsedTicks at zero and stops runTick() entirely - taking every
- * TickEvent with it. A tick-driven machine could never set the clock back and would wedge the client
- * for good; running here means it can always recover.</p>
- */
 public class TimerRange extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
 
@@ -126,8 +116,6 @@ public class TimerRange extends Module {
         this.predictedPosition = null;
     }
 
-    // ------------------------------------------------------------------ tick: prediction and decay
-
     @EventTarget
     public void onTick(TickEvent event) {
         if (!this.isEnabled()) {
@@ -144,8 +132,6 @@ public class TimerRange extends Module {
             this.timerBalance -= this.maxTimer.getValue() + this.fastTimerFactor.getValue();
         }
     }
-
-    // ------------------------------------------------------------------ game loop: the state machine
 
     @EventTarget
     public void onGameLoop(GameLoopEvent event) {
@@ -253,8 +239,6 @@ public class TimerRange extends Module {
         return ts;
     }
 
-    // ------------------------------------------------------------------ checks
-
     private double setSmartBalance(Entity entity, net.minecraft.entity.player.EntityPlayer player, double playerBPS, double distance) {
         double entityMotionX = Math.abs(entity.lastTickPosX - entity.posX);
         double entityMotionZ = Math.abs(entity.lastTickPosZ - entity.posZ);
@@ -336,11 +320,6 @@ public class TimerRange extends Module {
         return mc.theWorld.rayTraceBlocks(playerPos, end) == null;
     }
 
-    /**
-     * Astor's RotationManager writes through to the player's own rotation rather than keeping a separate
-     * copy, so reading rotationYaw here already covers the case Astra handles with its isActive() branch.
-     * The reach cap uses AimRange, standing in for Astra's KillAura range.
-     */
     private Vec3 isCrosshairOnEntity(Entity targetEntity) {
         if (mc.thePlayer == null || targetEntity == null) {
             return null;
@@ -399,8 +378,6 @@ public class TimerRange extends Module {
         }
         return closest;
     }
-
-    // ------------------------------------------------------------------ packets
 
     @EventTarget
     public void onPacket(PacketEvent event) {
@@ -464,8 +441,6 @@ public class TimerRange extends Module {
         return packet.getClass().getName().startsWith("net.minecraft.network.play.client.");
     }
 
-    // ------------------------------------------------------------------ render
-
     @EventTarget
     public void onRender3D(Render3DEvent event) {
         if (!this.isEnabled() || mc.theWorld == null || mc.thePlayer == null) {
@@ -515,8 +490,6 @@ public class TimerRange extends Module {
         double deltaZ = b.zCoord - a.zCoord;
         return Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
     }
-
-    // ------------------------------------------------------------------ player simulation
 
     private Vec3 updatePlayer(SimulatedPlayer state, int ticks) {
         this.handleMovement(state, ticks);
@@ -587,8 +560,6 @@ public class TimerRange extends Module {
         return new Vec3(state.posX, state.posY, state.posZ);
     }
 
-    // ------------------------------------------------------------------ timer
-
     private float getTimerSpeed() {
         return ((IAccessorMinecraft) mc).getTimer().timerSpeed;
     }
@@ -627,3 +598,4 @@ public class TimerRange extends Module {
         }
     }
 }
+

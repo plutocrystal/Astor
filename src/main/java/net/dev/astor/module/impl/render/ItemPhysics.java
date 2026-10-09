@@ -15,21 +15,11 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 
-/**
- * Renders dropped item models nicer than vanilla does, and optionally labels them.
- *
- * <p>The {@code Item} option draws the stack's display name in world space above each dropped item.
- * Ported from 3arthh4ck's ESP module, where the equivalent setting is a plain boolean that draws
- * {@code EntityItem#getItem().getDisplayName()} as a nametag for every visible dropped item. Their
- * version leans on its own {@code Scale} setting for the text size and force-disables fancy graphics
- * plus gamma 100 around the loop; neither carries over usefully here - 1.8.9 display names do not
- * depend on fancy graphics, and toggling gamma mid-render risks leaking render state.</p>
- */
 public class ItemPhysics extends Module {
     private static final String[] MODES = {"Default", "Physics", "1.7"};
     private static final int PHYSICS = 1;
     private static final int LEGACY = 2;
-    /** Reference distance the nametag keeps when {@code NameAutoScale} is off, so text stays legible. */
+    
     private static final double CONSTANT_SCALE_DISTANCE = 20.0;
     private static final double DISTANCE_SCALE_FACTOR = 0.0075;
     private static final double LABEL_HEIGHT = 0.25;
@@ -43,7 +33,7 @@ public class ItemPhysics extends Module {
     public final BooleanProperty item = new BooleanProperty("Item", false);
     public final BooleanProperty nameAutoScale =
             new BooleanProperty("NameAutoScale", false, this.item::getValue);
-    // Hidden while auto scale is on, since that mode ignores this multiplier entirely.
+    
     public final FloatProperty nameSize = new FloatProperty(
             "NameSize", 1.0F, 0.5F, 2.0F, () -> this.item.getValue() && !this.nameAutoScale.getValue());
 
@@ -92,11 +82,6 @@ public class ItemPhysics extends Module {
         }
     }
 
-    /**
-     * Draws the stack name as a camera-facing billboard. Render3DEvent fires after the world entities
-     * have gone out, so the label lands on top of the item, and depth is off so it stays readable
-     * through walls - the same behaviour the original ESP option had.
-     */
     private void drawItemName(EntityItem itemEntity, float partialTicks) {
         ItemStack stack = itemEntity.getEntityItem();
         if (stack == null || stack.getItem() == null) {
@@ -119,7 +104,7 @@ public class ItemPhysics extends Module {
         GlStateManager.translate(x, y, z);
         GlStateManager.rotate(mc.getRenderManager().playerViewY * -1.0F, 0.0F, 1.0F, 0.0F);
         GlStateManager.rotate(mc.getRenderManager().playerViewX, 1.0F, 0.0F, 0.0F);
-        // Negated: the font texture is flipped, the same reason NameTags does it.
+        
         GlStateManager.scale(-scale, -scale, 1.0);
         GlStateManager.disableDepth();
         mc.fontRendererObj.drawString(name, -width / 2.0F, -mc.fontRendererObj.FONT_HEIGHT, 0xFFFFFFFF, true);
@@ -129,11 +114,10 @@ public class ItemPhysics extends Module {
 
     private double getNameScale(double distance) {
         if (this.nameAutoScale.getValue()) {
-            // Auto scale owns the size entirely - NameSize does not apply, it would fight the
-            // distance curve and defeat the point of the option.
+            
             return Math.pow(Math.min(Math.max(distance, 6.0), 128.0), 0.75) * DISTANCE_SCALE_FACTOR;
         }
-        // Constant on-screen size, with NameSize as the multiplier.
+        
         return Math.pow(CONSTANT_SCALE_DISTANCE, 0.75) * DISTANCE_SCALE_FACTOR * this.nameSize.getValue();
     }
 
@@ -166,3 +150,4 @@ public class ItemPhysics extends Module {
         return new String[]{this.mode.getModeString()};
     }
 }
+

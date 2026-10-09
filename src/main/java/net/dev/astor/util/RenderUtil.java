@@ -521,10 +521,6 @@ public class RenderUtil {
         return previous + (current - previous) * t;
     }
 
-    /**
-     * Same as {@link #lerpFloat} but takes the short way round the seam. Yaw wraps at +/-180, so a plain
-     * lerp between 179 and -179 would sweep 358 degrees the wrong way.
-     */
     public static float lerpAngle(float current, float previous, float t) {
         return previous + MathHelper.wrapAngleTo180_float(current - previous) * t;
     }

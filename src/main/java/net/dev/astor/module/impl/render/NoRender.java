@@ -23,14 +23,6 @@ public class NoRender extends Module {
     public final BooleanProperty leggings = new BooleanProperty("Leggings", true);
     public final BooleanProperty boots = new BooleanProperty("Boots", true);
 
-    /**
-     * Stops the camera bob while leaving the hand's own bob alone.
-     *
-     * <p>View bobbing is one method called from three places: once from setupCameraTransform, which
-     * is what moves the whole view, and twice from renderHand, once around the hand itself and once
-     * around the overlays. Only the first is redirected, so the hand keeps bobbing exactly as it
-     * does with the vanilla setting on.</p>
-     */
     public final BooleanProperty viewBobbing = new BooleanProperty("ViewBobbing", false);
 
     @Override
@@ -83,3 +75,4 @@ public class NoRender extends Module {
         }
     }
 }
+

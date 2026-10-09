@@ -68,18 +68,10 @@ public class ClickGui extends GuiScreen {
 
     public void initGui() {
         super.initGui();
-        // Deliberately not resetting scroll/animScroll: the module reuses this screen instance
-        // across close/reopen, so leaving them alone is what makes the gui come back where it was
-        // left instead of jumping back to the top.
+        
         applyScrollOffset((int) this.animScroll);
     }
 
-    /**
-     * Consumes the wheel, eases towards the new position and hands the result to every category.
-     * There is no clamp on purpose - the gui scrolls freely in both directions, so it can never be
-     * stuck at an edge that depends on the window size.
-     * Must run before the categories are rendered or hit-tested.
-     */
     private void pollScroll() {
         int wheel = Mouse.getDWheel();
         if (wheel != 0) {
@@ -109,7 +101,6 @@ public class ClickGui extends GuiScreen {
             }
         }
 
-        // After everything else, so the note lands on top of the gui rather than under it.
         long now = System.currentTimeMillis();
         this.toolTip.update(hoveredModule(x, y), now);
         if (this.toolTip.isVisible(now)) {
@@ -117,21 +108,6 @@ public class ClickGui extends GuiScreen {
         }
     }
 
-    /**
-     * The module the cursor is resting on, hit-tested against the whole row rather than the name drawn
-     * in the middle of it.
-     *
-     * <p>Only opened categories are considered: a collapsed one draws no module rows, so its modules
-     * are not under the cursor in any sense the user could act on. The hit test itself comes from
-     * {@link ModuleComponent#isHovered}, which already accounts for the gui scroll.</p>
-     *
-     * <p>The last match wins rather than the first. Categories are freely draggable and can sit on top
-     * of each other, and they are painted in list order, so a later one is drawn over an earlier one -
-     * the topmost row under the cursor is the one the user is actually pointing at. Taking the first
-     * would report the row hidden underneath.</p>
-     *
-     * @return the hovered module, or null when the cursor is over nothing
-     */
     private Module hoveredModule(int x, int y) {
         Module hovered = null;
         for (CategoryComponent category : categoryList) {
@@ -215,8 +191,7 @@ public class ClickGui extends GuiScreen {
     }
 
     public void onGuiClosed() {
-        // The screen instance is reused across close and reopen, so a countdown left running would
-        // otherwise still be counting when it comes back up.
+        
         this.toolTip.reset();
         savePositions();
         if (Astor.moduleManager == null) {

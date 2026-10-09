@@ -14,13 +14,7 @@ import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 public class SpeedMine extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
     public final PercentProperty speed = new PercentProperty("Speed", 15);
-    /**
-     * Milliseconds of mining cooldown to enforce.
-     *
-     * <p>{@code blockHitDelay} counts ticks, so the value is divided by 50 where it is written.
-     * Anything under 50ms floors to zero and the +1 tick vanilla always needs still applies, so the
-     * floor is one tick rather than zero.</p>
-     */
+    
     public final IntProperty delay = new IntProperty("Delay", 0, 0, 200);
 
     @Override

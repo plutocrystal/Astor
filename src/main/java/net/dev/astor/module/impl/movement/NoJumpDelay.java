@@ -12,13 +12,7 @@ import net.minecraft.client.Minecraft;
 
 public class NoJumpDelay extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
-    /**
-     * Milliseconds of jump cooldown to enforce.
-     *
-     * <p>{@code jumpTicks} counts ticks, so the value is divided by 50 where it is written. Anything
-     * under 50ms floors to zero and the +1 tick vanilla always needs still applies, so the floor is
-     * one tick rather than zero.</p>
-     */
+    
     public final IntProperty delay = new IntProperty("Delay", 0, 0, 400);
 
     @Override

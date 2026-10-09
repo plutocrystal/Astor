@@ -120,10 +120,6 @@ public class BindComponent implements Component {
         return this.isBinding;
     }
 
-    /**
-     * Left half of the row only, so it does not overlap {@link HideComponent} on the right -
-     * {@link ModuleComponent#mouseDown} walks settings back to front and stops at the first hit.
-     */
     public boolean isHovered(int x, int y) {
         int mid = this.x + this.parentModule.category.getWidth() / 2;
         return x >= this.x && x < mid && y > this.y - 1 && y < this.y + 12;
@@ -139,8 +135,7 @@ public class BindComponent implements Component {
     }
 
     private void renderText(String s, int color) {
-        // Left aligned with the same 4px padding HideComponent uses on the right, and on the same
-        // +5 baseline every other setting row uses (CheckBoxComponent) so the two sit level.
+        
         Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(s,
                 (float) (this.parentModule.category.getX() + 4) * 2.0F,
                 (float) ((this.parentModule.category.getY() + this.offsetY + 5) * 2), color);

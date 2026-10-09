@@ -23,13 +23,6 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 
-/**
- * The attack itself, and the fake block that goes with it.
- *
- * <p>Kept apart from the module because it is the only part that sends packets: the rate limit, the
- * swing, the attack packet and the release all have to happen together, and the block state is
- * bookkeeping for the same sequence rather than for the target or the rotation.</p>
- */
 public class Attacker {
     private static final Minecraft mc = Minecraft.getMinecraft();
 
@@ -46,29 +39,6 @@ public class Attacker {
         return 1000L / RandomUtil.nextLong(this.owner.minCPS.getValue(), this.owner.maxCPS.getValue());
     }
 
-    /**
-     * SmartAttack: hold the swing back so the hit lands where the server can register a crit.
-     *
-     * <p>Ported from Astra's Attack, whose gate is {@code smartAttack && player.hurtTime == 0} - the
-     * player must be undamaged, so a hurt player still swings on the module's own rate rather than
-     * the air timing below.</p>
-     *
-     * <p>Two separate waits, in Astra's order:</p>
-     * <ul>
-     *   <li>Target side: the target must be at hurtTime 0, or at the 10 that marks the tick the
-     *       server last accepted a crit. Anything in between is a hit already in flight - the packet
-     *       is on the wire but the target has not taken it yet, so a second one now would be a
-     *       duplicate the server has already counted.</li>
-     *   <li>Air side, only while airborne in a crit-eligible state: while rising the player cannot
-     *       crit at all, so no point swinging; while falling, the swing is held for one ping so the
-     *       client is not still rising when the server applies the crit. The ping is the estimate the
-     *       client has of the server's clock, which is the only way to land the timing without reading
-     *       the server's position directly.</li>
-     * </ul>
-     *
-     * <p>Returns whether the attack may go out. Cleared on {@link #reset()} so re-enabling the
-     * module does not carry a half-finished fall wait across.</p>
-     */
     private boolean isSmartAttackBlocked(AttackData target) {
         if (!this.owner.smartAttack.getValue() || mc.thePlayer.hurtTime != 0) {
             this.smartPending = false;
@@ -87,7 +57,7 @@ public class Attacker {
             return false;
         }
         if (mc.thePlayer.motionY > 0.0D) {
-            // Still rising: no swing can crit from here.
+            
             this.smartPending = false;
             return true;
         }
@@ -102,7 +72,6 @@ public class Attacker {
         return false;
     }
 
-    /** The client's estimate of the server's clock, which is what the fall wait above is measured in. */
     private long getPing() {
         if (mc.getNetHandler() == null || mc.thePlayer == null) {
             return 0L;
@@ -114,11 +83,6 @@ public class Attacker {
         return Math.max(0L, info.getResponseTime());
     }
 
-    /**
-     * Sends the attack if the rate limit has expired and the aim actually lands on the box. Returns
-     * whether the swing was spent, so a pending fake block knows to use interact-attack instead of a
-     * plain use-item.
-     */
     public boolean performAttack(AttackData target, float yaw, float pitch) {
         if (Astor.playerStateManager.digging || Astor.playerStateManager.placing) {
             return false;
@@ -129,9 +93,7 @@ public class Attacker {
         } else {
             this.owner.addAttackDelay(this.getAttackDelay());
             if (this.isSmartAttackBlocked(target)) {
-                // The swing is not sent and the accumulator is not charged, so the next tick is free
-                // to try again rather than having to wait out the rate limit for a swing that never
-                // happened.
+                
                 return false;
             }
             mc.thePlayer.swingItem();
@@ -168,10 +130,6 @@ public class Attacker {
         this.owner.setBlockingState(false);
     }
 
-    /**
-     * Attack and block in one packet sequence. Used when the attack already happened this tick, so a
-     * plain use-item would read as blocking without ever hitting.
-     */
     public void interactAttack(AttackData target, float yaw, float pitch) {
         MovingObjectPosition mop = RotationUtil.rayTrace(target.getBox(), yaw, pitch, 8.0);
         if (mop == null) {
@@ -190,15 +148,10 @@ public class Attacker {
         this.owner.setBlockingState(true);
     }
 
-    /**
-     * Whether a fake block is possible at all. Only a sword can, because EnumAction.BLOCK is the only
-     * action a sword has and the fake block is what puts the item into use.
-     */
     public boolean canAutoBlock() {
         return ItemUtil.isHoldingSword();
     }
 
-    /** Ticks the rate limit down. The module's own tick, but the counter lives with the attacker. */
     public void decayAttackDelay() {
         if (this.owner.getAttackDelayMS() > 0L) {
             this.owner.addAttackDelay(-50L);
@@ -217,7 +170,6 @@ public class Attacker {
         }
     }
 
-    /** Keeps the fake block held across a tick boundary, since the server only sees one release. */
     public void holdBlock() {
         if (this.owner.isPlayerBlocking() && !mc.thePlayer.isBlocking()) {
             mc.thePlayer.setItemInUse(mc.thePlayer.getHeldItem(), mc.thePlayer.getHeldItem().getMaxItemUseDuration());
@@ -240,3 +192,4 @@ public class Attacker {
         this.smartPendingSince = 0L;
     }
 }
+

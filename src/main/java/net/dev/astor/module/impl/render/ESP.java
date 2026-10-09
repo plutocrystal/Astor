@@ -50,8 +50,7 @@ public class ESP extends Module {
         } else if (!entityPlayer.ignoreFrustumCheck && !RenderUtil.isInViewFrustum(entityPlayer.getEntityBoundingBox(), 0.1F)) {
             return false;
         } else if (entityPlayer != mc.thePlayer && entityPlayer != mc.getRenderViewEntity()) {
-            // Enemy list membership is what this module draws, not the Target module, so a marked
-            // enemy still gets an ESP box while it is on the same team as us.
+            
             return TeamUtil.isTarget(entityPlayer) ? this.enemies.getValue() : this.players.getValue();
         } else {
             return this.self.getValue() && mc.gameSettings.thirdPersonView != 0;
@@ -226,3 +225,4 @@ public class ESP extends Module {
         }
     }
 }
+

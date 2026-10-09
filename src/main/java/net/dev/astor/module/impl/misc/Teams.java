@@ -11,23 +11,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.util.IChatComponent;
 
-/**
- * Detects whether an entity belongs to the same team as the local player, for servers that hide the
- * scoreboard team and only give the hint away through cosmetics.
- *
- * <p>Ported from LiquidBounce's {@code misc/Teams.kt}. Upstream gates each heuristic behind its own
- * switch and leaves the module toggle inert; here the module being switched off turns the whole
- * check off as well, which the rest of this codebase expects.</p>
- *
- * <p>The checks run in order and the first match wins, matching upstream.</p>
- */
 public class Teams extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
 
-    /**
-     * Disabled stand-in used before the module manager has registered the real instance, so early
-     * callers never see a null module.
-     */
     private static final Teams FALLBACK = new Teams();
 
     public final BooleanProperty scoreboardTeam = new BooleanProperty("ScoreboardTeam", true);
@@ -54,10 +40,6 @@ public class Teams extends Module {
         return Teams.FALLBACK;
     }
 
-    /**
-     * Whether the entity is on our team, using the scoreboard, the name colour, the leather armour
-     * colour or the GommeSW name prefix depending on which switches are on.
-     */
     public boolean isInYourTeam(EntityLivingBase entity) {
         if (entity == null || mc.thePlayer == null) {
             return false;
@@ -75,9 +57,7 @@ public class Teams extends Module {
             return true;
         }
         if (teams.nameColor.getValue() && clientName.startsWith("§") && clientName.length() > 1) {
-            // upstream returns unconditionally once it gets here, so the armour check below only
-            // runs when NameColor is off or our own name carries no colour code. Kept as is so the
-            // port behaves identically.
+            
             return targetName.startsWith("§" + clientName.charAt(1));
         }
         return teams.armorColor.getValue() && this.hasMatchingLeather(mc.thePlayer, entity);
@@ -89,9 +69,6 @@ public class Teams extends Module {
         return selfTeam != null && entityTeam != null && selfTeam.isSameTeam(entityTeam);
     }
 
-    /**
-     * GommeSW names its teams T1, T2, ... so the second character carries the whole signal.
-     */
     private boolean isSameGommePrefix(String clientName, String targetName) {
         return clientName.startsWith("T") && targetName.startsWith("T")
                 && clientName.length() > 1 && targetName.length() > 1
@@ -99,10 +76,6 @@ public class Teams extends Module {
                 && clientName.charAt(1) == targetName.charAt(1);
     }
 
-    /**
-     * Matches upstream by requiring the slot to hold dyed leather on both sides, comparing the dye
-     * colour rather than the item.
-     */
     private boolean hasMatchingLeather(EntityLivingBase player, EntityLivingBase entity) {
         for (int slot = 0; slot < 4; slot++) {
             ItemArmor playerArmor = getArmor(player, slot);
@@ -131,3 +104,4 @@ public class Teams extends Module {
         return component == null ? "" : component.getFormattedText().replace("§r", "");
     }
 }
+

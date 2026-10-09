@@ -111,8 +111,7 @@ public class ColorPickerComponent implements Component {
     }
 
     private static float hueAt(int column, int width) {
-        // Divide by width - 1 so the bar covers the full 0..1 hue range; dividing by width left the
-        // last few degrees unreachable. Hue 1.0 renders the same red as hue 0.0, so no seam shows.
+        
         return width <= 1 ? 0f : (float) column / (width - 1);
     }
 

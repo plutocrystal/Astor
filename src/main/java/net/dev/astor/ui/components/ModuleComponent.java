@@ -36,12 +36,11 @@ public class ModuleComponent implements Component {
             List<Property<?>> declared = Astor.propertyManager.properties.get(mod.getClass());
             for (Property<?> baseProperty : declared) {
                 if (baseProperty == mod.hide) {
-                    // Rendered next to the bind instead of as its own row.
+                    
                     continue;
                 }
                 if (isNestedInGroup(declared, baseProperty)) {
-                    // Rendered under its ListProperty's own row. Still in propertyManager's list, which
-                    // is what keeps it in the config - only the row here is skipped.
+                    
                     continue;
                 }
                 if (baseProperty instanceof BooleanProperty) {
@@ -93,15 +92,10 @@ public class ModuleComponent implements Component {
             }
         }
 
-        // Hide on the left, key bind on the right, sharing one row.
         this.settings.add(new HideComponent(this, y));
         this.settings.add(new BindComponent(this, y));
     }
 
-    /**
-     * Whether a property is a child of one of this module's groups, and so already rendered nested
-     * under it. Compared by identity, which is what the child list holds.
-     */
     private static boolean isNestedInGroup(List<Property<?>> declared, Property<?> candidate) {
         for (Property<?> property : declared) {
             if (property instanceof ListProperty && ((ListProperty) property).getChildren().contains(candidate)) {
@@ -118,8 +112,7 @@ public class ModuleComponent implements Component {
         for (int i = 0; i < this.settings.size(); i++) {
             Component c = this.settings.get(i);
             c.setComponentStartAt(y);
-            // The last two (HideComponent and BindComponent) share one row, so y must not advance
-            // for the first of the pair or the two end up staggered on separate rows.
+            
             if (i < this.settings.size() - 2 && c.isVisible()) {
                 y += c.getHeight();
             }
@@ -152,7 +145,7 @@ public class ModuleComponent implements Component {
             int h = 16;
             for (int i = 0; i < this.settings.size(); i++) {
                 Component c = this.settings.get(i);
-                // Count the shared Hide/Bind row once instead of twice.
+                
                 if (c.isVisible() && i < this.settings.size() - 1) {
                     h += c.getHeight();
                 }
@@ -217,10 +210,7 @@ public class ModuleComponent implements Component {
     }
 
     public boolean isHovered(int x, int y) {
-        // The whole row, not the name drawn in the middle of it: the box the category background
-        // covers for this module. Bounds are inclusive at the low edge and exclusive at the high one
-        // so the row is exactly width x 16 pixels - a strict comparison on both sides would drop the
-        // first and last row of it, which is felt at the edges of a 92x16 target.
+        
         return x >= this.category.getX() && x < this.category.getX() + this.category.getWidth()
                 && y >= this.category.getY() + this.offsetY && y < this.category.getY() + 16 + this.offsetY;
     }

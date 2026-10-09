@@ -12,11 +12,7 @@ public abstract class Module {
     protected final int defaultKey;
     protected boolean enabled;
     protected int key;
-    /**
-     * Controls whether this module shows up in the HUD. Declared here so every module gets one, and
-     * created per instance in the constructor - a shared property instance would have one value for
-     * every module and a single owner.
-     */
+    
     public final BooleanProperty hide;
 
     public Module(String name, Category category, boolean enabled) {
@@ -52,10 +48,6 @@ public abstract class Module {
         return new String[0];
     }
 
-    /**
-     * One line on what this module actually does, shown as a tooltip in the click gui once the cursor
-     * has rested on the module. Empty means no tooltip.
-     */
     public String getDescription() {
         return "";
     }

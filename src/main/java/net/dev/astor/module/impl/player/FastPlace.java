@@ -29,12 +29,6 @@ public class FastPlace extends Module {
     private static final DecimalFormat df = new DecimalFormat("0.0#", new DecimalFormatSymbols(Locale.US));
     private long delayMS = 0L;
 
-    /**
-     * Milliseconds to add on top of the vanilla four-tick cooldown whenever it completes.
-     *
-     * <p>{@link #delayMS} is drained 50 per tick, so it counts milliseconds despite the name; the
-     * value is added to it directly and the decrement does the tick conversion.</p>
-     */
     public final FloatProperty delay = new FloatProperty("Delay", 50.0F, 50.0F, 150.0F, 0);
     public final BooleanProperty blocksOnly = new BooleanProperty("BlocksOnly", true);
     public final BooleanProperty placeFix = new BooleanProperty("PlaceFix", true);
@@ -105,3 +99,4 @@ public class FastPlace extends Module {
         return new String[]{df.format(this.delay.getValue())};
     }
 }
+
